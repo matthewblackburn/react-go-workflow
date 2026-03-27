@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SchemaField } from '../JsonBuilder';
-import { schemaToTree, treeToSchema } from '../JsonBuilder';
+import { schemaToTree, treeToJson, treeToSchema } from '../JsonBuilder';
 
 describe('schemaToTree', () => {
   it('returns empty array for undefined schema', () => {
@@ -196,6 +196,61 @@ describe('treeToSchema', () => {
     ];
     const schema = treeToSchema(fields);
     expect(schema!.properties.orders.items.properties.id.type).toBe('number');
+  });
+});
+
+describe('treeToJson', () => {
+  it('converts flat fields to JSON values', () => {
+    const fields: SchemaField[] = [
+      { name: 'name', type: 'string', description: '', default: 'John' },
+    ];
+    expect(treeToJson(fields)).toEqual({ name: 'John' });
+  });
+
+  it('converts nested objects recursively', () => {
+    const fields: SchemaField[] = [
+      {
+        name: 'address',
+        type: 'object',
+        description: '',
+        properties: [
+          { name: 'city', type: 'string', description: '', default: 'Sydney' },
+        ],
+      },
+    ];
+    expect(treeToJson(fields)).toEqual({ address: { city: 'Sydney' } });
+  });
+
+  it('preserves boolean and number types', () => {
+    const fields: SchemaField[] = [
+      { name: 'active', type: 'boolean', description: '', default: true },
+      { name: 'count', type: 'number', description: '', default: 42 },
+    ];
+    const result = treeToJson(fields);
+    expect(result.active).toBe(true);
+    expect(result.count).toBe(42);
+  });
+
+  it('filters out fields with empty names', () => {
+    const fields: SchemaField[] = [
+      { name: '', type: 'string', description: '', default: 'skip' },
+      { name: 'valid', type: 'string', description: '', default: 'keep' },
+    ];
+    const result = treeToJson(fields);
+    expect(Object.keys(result)).toEqual(['valid']);
+    expect(result.valid).toBe('keep');
+  });
+
+  it('uses default fallbacks for undefined defaults', () => {
+    const fields: SchemaField[] = [
+      { name: 'text', type: 'string', description: '' },
+      { name: 'num', type: 'number', description: '' },
+      { name: 'flag', type: 'boolean', description: '' },
+    ];
+    const result = treeToJson(fields);
+    expect(result.text).toBe('');
+    expect(result.num).toBe(0);
+    expect(result.flag).toBe(false);
   });
 });
 

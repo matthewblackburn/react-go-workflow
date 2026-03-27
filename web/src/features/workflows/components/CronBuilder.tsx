@@ -36,7 +36,7 @@ function cronToHuman(expr: string): string {
   }
 }
 
-function detectFrequency(cron: string): Frequency {
+export function detectFrequency(cron: string): Frequency {
   if (!cron) return 'daily';
   const parts = cron.trim().split(/\s+/);
   if (parts.length !== 5) return 'custom';
@@ -51,7 +51,7 @@ function detectFrequency(cron: string): Frequency {
   return 'custom';
 }
 
-function parseCronParts(cron: string) {
+export function parseCronParts(cron: string) {
   const parts = cron.trim().split(/\s+/);
   if (parts.length !== 5)
     return { minute: '0', hour: '9', dayOfMonth: '1', dayOfWeek: '1', everyMinutes: '5' };
