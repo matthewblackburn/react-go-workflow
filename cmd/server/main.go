@@ -13,6 +13,7 @@ import (
 
 	"react-go-workflow/ent"
 	_ "react-go-workflow/ent/runtime"
+	"react-go-workflow/internal/ai"
 	"react-go-workflow/internal/engine"
 	"react-go-workflow/internal/engine/runners"
 	"react-go-workflow/internal/execution"
@@ -49,6 +50,7 @@ func run() error {
 	jwtSecret := envOr("JWT_SECRET", "dev-secret-change-me")
 	encKeyRaw := envOr("SECRET_ENCRYPTION_KEY", "dev-encryption-key-change-me")
 	encKey := secret.DeriveKey(encKeyRaw)
+	anthropicKey := envOr("ANTHROPIC_API_KEY", "")
 
 	slog.Info("configuration loaded", "port", port)
 
@@ -111,6 +113,7 @@ func run() error {
 	secretHandler := secret.NewHandler(client, encKey)
 	notificationHandler := notification.NewHandler(client)
 	databaseHandler := database.NewHandler(rawDB)
+	aiHandler := ai.NewHandler(client, anthropicKey)
 
 	// Router
 	r := chi.NewRouter()
@@ -213,13 +216,20 @@ func run() error {
 
 		// Dashboard
 		r.Get("/bff/dashboard", workflowHandler.Dashboard)
+
+		// AI — extended timeout for LLM calls
+		r.Group(func(r chi.Router) {
+			r.Use(chimw.Timeout(60 * time.Second))
+			r.Post("/v1/ai/generate-workflow", aiHandler.GenerateWorkflow)
+			r.Post("/v1/ai/diagnose-execution", aiHandler.DiagnoseExecution)
+		})
 	})
 
 	// Webhook endpoint (public, no auth)
 	r.Post("/webhooks/{slug}", webhookHandler.Handle)
 
 	// WebSocket endpoint for live execution updates
-	wsHandler := engine.NewWSHandler(eventBus)
+	wsHandler := engine.NewWSHandler(eventBus, client)
 	r.Get("/ws/executions/{id}", wsHandler.Handle)
 
 	// Start server

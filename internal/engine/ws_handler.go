@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"time"
+
+	"react-go-workflow/ent"
+	entwfexec "react-go-workflow/ent/workflowexecution"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -12,10 +16,11 @@ import (
 
 type WSHandler struct {
 	eventBus *EventBus
+	client   *ent.Client
 }
 
-func NewWSHandler(eventBus *EventBus) *WSHandler {
-	return &WSHandler{eventBus: eventBus}
+func NewWSHandler(eventBus *EventBus, client *ent.Client) *WSHandler {
+	return &WSHandler{eventBus: eventBus, client: client}
 }
 
 // Handle upgrades the HTTP connection to a WebSocket and streams execution events.
@@ -42,6 +47,60 @@ func (h *WSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	defer h.eventBus.Unsubscribe(executionID, ch)
 
 	slog.Info("websocket client connected", "execution_id", executionID)
+
+	// Replay current state: if execution already finished before we connected,
+	// send the terminal status immediately so the frontend doesn't hang.
+	if exec, err := h.client.WorkflowExecution.Query().
+		Where(entwfexec.ID(executionID)).
+		WithStepExecutions().
+		Only(ctx); err == nil {
+
+		// Send step statuses for any steps that already ran
+		for _, se := range exec.Edges.StepExecutions {
+			stepID := se.StepID
+			evt := Event{
+				Type:      EventStepStatus,
+				StepID:    &stepID,
+				Status:    string(se.Status),
+				Timestamp: se.DateCreated,
+			}
+			if se.Error != "" {
+				evt.Error = se.Error
+			}
+			if se.Output != nil {
+				evt.Output = se.Output
+			}
+			if se.StartedAt != nil {
+				evt.StartedAt = se.StartedAt
+			}
+			if se.CompletedAt != nil {
+				evt.CompletedAt = se.CompletedAt
+			}
+			if data, err := json.Marshal(evt); err == nil {
+				conn.Write(ctx, websocket.MessageText, data)
+			}
+		}
+
+		// Send execution status if terminal
+		status := string(exec.Status)
+		if status == "completed" || status == "failed" || status == "cancelled" {
+			now := time.Now()
+			evt := Event{
+				Type:        EventExecutionStatus,
+				Status:      status,
+				Error:       exec.Error,
+				Timestamp:   now,
+				CompletedAt: exec.CompletedAt,
+			}
+			if exec.Output != nil {
+				evt.Output = exec.Output
+			}
+			if data, err := json.Marshal(evt); err == nil {
+				conn.Write(ctx, websocket.MessageText, data)
+			}
+			return // Already done, no need to stream
+		}
+	}
 
 	// Read client commands in background (cancel, pause, etc.)
 	go func() {

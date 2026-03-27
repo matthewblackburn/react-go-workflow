@@ -1,4 +1,5 @@
 import { useReactFlow } from '@xyflow/react';
+import { useCallback, useRef } from 'react';
 import {
   LayoutDashboard,
   Loader2,
@@ -6,6 +7,7 @@ import {
   Play,
   Save,
   Settings,
+  Sparkles,
   StickyNote,
   ZoomIn,
   ZoomOut,
@@ -20,6 +22,7 @@ interface BuilderToolbarProps {
   onAddNote: () => void;
   onAutoLayout: () => void;
   onOpenSettings: () => void;
+  onOpenAIChat: () => void;
   onExecute: () => void;
   isSaving: boolean;
   isExecuting: boolean;
@@ -33,6 +36,7 @@ export function BuilderToolbar({
   onAddNote,
   onAutoLayout,
   onOpenSettings,
+  onOpenAIChat,
   onExecute,
   isSaving,
   isExecuting,
@@ -40,6 +44,23 @@ export function BuilderToolbar({
   executionStatus,
 }: BuilderToolbarProps) {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
+
+  const aiButtonRef = useRef<HTMLButtonElement>(null);
+  const glowRef = useRef<HTMLSpanElement>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!aiButtonRef.current || !glowRef.current) return;
+    const rect = aiButtonRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    glowRef.current.style.left = `${x}px`;
+    glowRef.current.style.top = `${y}px`;
+    glowRef.current.style.opacity = '1';
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (glowRef.current) glowRef.current.style.opacity = '0';
+  }, []);
 
   return (
     <div className="flex h-12 items-center justify-between border-b bg-background px-4">
@@ -63,6 +84,29 @@ export function BuilderToolbar({
       </div>
 
       <div className="flex items-center gap-1">
+        <Button
+          ref={aiButtonRef}
+          size="sm"
+          className="group relative h-8 overflow-hidden bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm shadow-violet-500/25 transition-all hover:from-violet-500 hover:to-indigo-500 hover:shadow-md hover:shadow-violet-500/30"
+          onClick={onOpenAIChat}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        >
+          <span
+            ref={glowRef}
+            className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 transition-opacity duration-200"
+            style={{
+              width: 80,
+              height: 80,
+              background: 'radial-gradient(circle, rgba(255,255,255,0.35) 0%, transparent 70%)',
+            }}
+          />
+          <Sparkles className="relative mr-1.5 h-3.5 w-3.5 animate-shimmer transition-transform group-hover:rotate-12 group-hover:scale-110" />
+          <span className="relative">AI Assistant</span>
+        </Button>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

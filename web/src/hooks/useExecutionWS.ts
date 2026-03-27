@@ -14,6 +14,7 @@ export function useExecutionWS(executionId: string | null) {
   const [stepStatuses, setStepStatuses] = useState<Map<string, string>>(new Map());
   const [stepResults, setStepResults] = useState<Map<string, StepResult>>(new Map());
   const [executionStatus, setExecutionStatus] = useState<string | null>(null);
+  const [executionError, setExecutionError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -51,16 +52,43 @@ export function useExecutionWS(executionId: string | null) {
 
       if (data.type === 'execution_status' && data.status) {
         setExecutionStatus(data.status);
+        if (data.error) setExecutionError(data.error);
       }
     };
 
     ws.onerror = () => {
-      // Connection failed — might not have a subscriber yet, that's ok
+      setExecutionStatus('failed');
+    };
+
+    ws.onclose = () => {
+      // If the connection closes without us receiving a terminal status,
+      // poll the execution to find out what happened.
+      if (wsRef.current) {
+        wsRef.current = null;
+        // Only poll if we haven't already received a terminal status
+        setExecutionStatus((current) => {
+          if (current === 'completed' || current === 'failed' || current === 'cancelled') {
+            return current;
+          }
+          // Fetch execution status from REST API
+          fetch(`/v1/executions/${executionId}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data?.status) {
+                setExecutionStatus(data.status);
+              }
+            })
+            .catch(() => {
+              setExecutionStatus('failed');
+            });
+          return current;
+        });
+      }
     };
 
     return () => {
-      ws.close();
       wsRef.current = null;
+      ws.close();
     };
   }, [executionId]);
 
@@ -69,7 +97,8 @@ export function useExecutionWS(executionId: string | null) {
     setStepStatuses(new Map());
     setStepResults(new Map());
     setExecutionStatus(null);
+    setExecutionError(null);
   }, []);
 
-  return { events, stepStatuses, stepResults, executionStatus, reset };
+  return { events, stepStatuses, stepResults, executionStatus, executionError, reset };
 }

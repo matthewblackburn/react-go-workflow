@@ -26,8 +26,24 @@ import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { secretApi } from '@/api/secrets';
 import { workflowApi } from '@/api/workflows';
+import {
+  JsonBuilder,
+  RULES_JSON,
+  schemaToTree,
+  treeToJson,
+} from '@/components/json-builder/JsonBuilder';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useExecutionWS } from '@/hooks/useExecutionWS';
+import type { GeneratedEdge, GeneratedStep } from '@/types/ai';
 import type { CanvasNote, StepType, WorkflowEdge, WorkflowStep } from '@/types/workflow';
+import { AIChatPanel } from '../components/AIChatPanel';
 import { BuilderToolbar } from '../components/BuilderToolbar';
 import { ConfigPanel } from '../components/ConfigPanel';
 import { ExecutionDrawer } from '../components/ExecutionDrawer';
@@ -114,9 +130,23 @@ function WorkflowBuilderInner() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [draggingStepType, setDraggingStepType] = useState<StepType | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveRef = useRef<(() => void) | null>(null);
+  const markDirty = useCallback(() => {
+    setHasUnsavedChanges(true);
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => {
+      saveRef.current?.();
+    }, 1500);
+  }, []);
   const [currentExecutionId, setCurrentExecutionId] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [aiChatOpen, setAIChatOpen] = useState(false);
+  const [executeDialogOpen, setExecuteDialogOpen] = useState(false);
+  const [executeInputValue, setExecuteInputValue] = useState<Record<string, any> | undefined>(
+    undefined,
+  );
 
   // WebSocket for live execution updates
   const {
@@ -124,6 +154,7 @@ function WorkflowBuilderInner() {
     stepStatuses,
     stepResults,
     executionStatus,
+    executionError,
     reset: resetWS,
   } = useExecutionWS(currentExecutionId);
 
@@ -140,10 +171,10 @@ function WorkflowBuilderInner() {
       if (executionStatus === 'completed') {
         toast.success('Workflow completed successfully');
       } else {
-        toast.error('Workflow execution failed');
+        toast.error(executionError || 'Workflow execution failed');
       }
     }
-  }, [executionStatus]);
+  }, [executionStatus, executionError]);
 
   // Listen for edge branch toggle events from clickable edge labels
   useEffect(() => {
@@ -162,11 +193,11 @@ function WorkflowBuilderInner() {
           };
         }),
       );
-      setHasUnsavedChanges(true);
+      markDirty();
     };
     window.addEventListener('toggle-edge-branch', handler);
     return () => window.removeEventListener('toggle-edge-branch', handler);
-  }, [setNodes]);
+  }, [setNodes, markDirty]);
 
   // Listen for quick-edit changes from inline node fields
   useEffect(() => {
@@ -184,11 +215,11 @@ function WorkflowBuilderInner() {
           };
         }),
       );
-      setHasUnsavedChanges(true);
+      markDirty();
     };
     window.addEventListener('node-quick-edit', handler);
     return () => window.removeEventListener('node-quick-edit', handler);
-  }, [setNodes]);
+  }, [setNodes, markDirty]);
 
   // Map step type IDs to StepType objects
   const stepTypeMapRef = useRef<Map<string, StepType>>(new Map());
@@ -356,6 +387,21 @@ function WorkflowBuilderInner() {
       });
   }, [nodes]);
 
+  // Step info for AI diagnosis
+  const stepInfoMap = useMemo(() => {
+    const map = new Map<string, { name: string; stepType: string; config: Record<string, any> }>();
+    for (const n of nodes) {
+      if (n.type !== 'stepNode') continue;
+      const d = n.data as unknown as StepNodeData;
+      map.set(n.id, {
+        name: d.label,
+        stepType: d.stepType?.name ?? 'unknown',
+        config: d.config ?? {},
+      });
+    }
+    return map;
+  }, [nodes]);
+
   // Select node
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     if (node.type === 'stepNode' || node.type === 'stickyNote') {
@@ -400,10 +446,10 @@ function WorkflowBuilderInner() {
       stepTypeMapRef.current.set(stepType.id, stepType);
       setNodes((nds) => [...nds, newNode]);
       setSelectedNodeId(newId);
-      setHasUnsavedChanges(true);
+      markDirty();
       setDraggingStepType(null);
     },
-    [setNodes, nodes],
+    [setNodes, nodes, markDirty],
   );
 
   // Add sticky note
@@ -416,8 +462,8 @@ function WorkflowBuilderInner() {
       data: { content: '', color: 'yellow' } satisfies StickyNoteData,
     };
     setNodes((nds) => [...nds, newNode]);
-    setHasUnsavedChanges(true);
-  }, [setNodes]);
+    markDirty();
+  }, [setNodes, markDirty]);
 
   // Manual auto layout button
   const handleAutoLayout = useCallback(() => {
@@ -425,9 +471,67 @@ function WorkflowBuilderInner() {
     const otherNodes = nodes.filter((n) => n.type !== 'stepNode');
     const layouted = getLayoutedNodes(stepNodes, computedEdges);
     setNodes([...layouted, ...otherNodes]);
-    setHasUnsavedChanges(true);
+    markDirty();
     setTimeout(() => fitView({ padding: 0.2 }), 50);
-  }, [nodes, computedEdges, setNodes, fitView]);
+  }, [nodes, computedEdges, setNodes, fitView, markDirty]);
+
+  // Handle AI-generated workflow
+  const handleAIWorkflowGenerated = useCallback(
+    (steps: GeneratedStep[], edges: GeneratedEdge[], inputSchema?: Record<string, unknown>) => {
+      const stMap = stepTypeMapRef.current;
+
+      // Build name→id map from generated steps
+      const nameToId = new Map(steps.map((s) => [s.name, s.id]));
+
+      // Build waitForStepIds and waitForBranches from edges
+      const waitForMap = new Map<string, string[]>();
+      const branchMap = new Map<string, Record<string, 'true' | 'false'>>();
+      for (const edge of edges) {
+        const sourceId = nameToId.get(edge.source_step_name);
+        const targetId = nameToId.get(edge.target_step_name);
+        if (!sourceId || !targetId) continue;
+
+        const existing = waitForMap.get(targetId) ?? [];
+        existing.push(sourceId);
+        waitForMap.set(targetId, existing);
+
+        if (edge.source_output === 'true' || edge.source_output === 'false') {
+          const branches = branchMap.get(targetId) ?? {};
+          branches[sourceId] = edge.source_output;
+          branchMap.set(targetId, branches);
+        }
+      }
+
+      // Create nodes
+      const newNodes = steps.map((step) => {
+        const stepType = stMap.get(step.step_type_id);
+        return makeStepNode(
+          step.id,
+          { x: 0, y: 0 },
+          {
+            label: step.name,
+            description: step.description,
+            stepType,
+            config: step.config as Record<string, any>,
+            waitForStepIds: waitForMap.get(step.id) ?? [],
+            waitForBranches: branchMap.get(step.id) ?? {},
+          },
+        );
+      });
+
+      // Keep existing non-step nodes (sticky notes)
+      const otherNodes = nodes.filter((n) => n.type !== 'stepNode');
+      setNodes([...newNodes, ...otherNodes]);
+      markDirty();
+      setTimeout(() => fitView({ padding: 0.2 }), 100);
+
+      // Save input schema to workflow if AI provided one
+      if (inputSchema && id) {
+        workflowApi.update(id, { input_schema: inputSchema } as any);
+      }
+    },
+    [nodes, setNodes, fitView, markDirty, id],
+  );
 
   // Save canvas
   const saveMutation = useMutation({
@@ -483,29 +587,54 @@ function WorkflowBuilderInner() {
     onSuccess: () => {
       setHasUnsavedChanges(false);
       queryClient.invalidateQueries({ queryKey: ['workflow', id] });
-      toast.success('Workflow saved');
     },
     onError: () => toast.error('Failed to save workflow'),
   });
 
+  // Keep saveRef pointed at the latest save function each render
+  saveRef.current = () => saveMutation.mutate();
+
   // Execute workflow
-  const handleExecute = useCallback(async () => {
+  const doExecute = useCallback(
+    async (input?: Record<string, any>) => {
+      if (!id) return;
+      setExecuteDialogOpen(false);
+      setIsExecuting(true);
+      resetWS();
+
+      setNodes((nds) => nds.map((n) => ({ ...n, className: '' })));
+
+      try {
+        const result = await workflowApi.execute(id, input);
+        setCurrentExecutionId(result.execution_id);
+        toast.info('Workflow execution started');
+      } catch {
+        setIsExecuting(false);
+        toast.error('Failed to start execution');
+      }
+    },
+    [id, resetWS, setNodes],
+  );
+
+  const handleExecute = useCallback(() => {
     if (!id) return;
-    setIsExecuting(true);
-    resetWS();
 
-    // Clear previous execution styling
-    setNodes((nds) => nds.map((n) => ({ ...n, className: '' })));
-
-    try {
-      const result = await workflowApi.execute(id);
-      setCurrentExecutionId(result.execution_id);
-      toast.info('Workflow execution started');
-    } catch {
-      setIsExecuting(false);
-      toast.error('Failed to start execution');
+    // If workflow has input_schema, show dialog to collect input
+    const schema = workflow?.input_schema;
+    if (schema && typeof schema === 'object' && Object.keys(schema).length > 0) {
+      const defaults = treeToJson(schemaToTree(schema as Record<string, any>));
+      setExecuteInputValue(defaults);
+      setExecuteDialogOpen(true);
+      return;
     }
-  }, [id, resetWS, setNodes]);
+
+    // No input schema — execute directly
+    doExecute();
+  }, [id, workflow, doExecute]);
+
+  const handleExecuteWithInput = useCallback(() => {
+    doExecute(executeInputValue ?? {});
+  }, [executeInputValue, doExecute]);
 
   // Config panel handlers
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
@@ -522,9 +651,9 @@ function WorkflowBuilderInner() {
       setNodes((nds) =>
         nds.map((n) => (n.id === selectedNodeId ? { ...n, data: { ...n.data, content } } : n)),
       );
-      setHasUnsavedChanges(true);
+      markDirty();
     },
-    [selectedNodeId, setNodes],
+    [selectedNodeId, setNodes, markDirty],
   );
 
   const handleNoteColorChange = useCallback(
@@ -532,9 +661,9 @@ function WorkflowBuilderInner() {
       setNodes((nds) =>
         nds.map((n) => (n.id === selectedNodeId ? { ...n, data: { ...n.data, color } } : n)),
       );
-      setHasUnsavedChanges(true);
+      markDirty();
     },
-    [selectedNodeId, setNodes],
+    [selectedNodeId, setNodes, markDirty],
   );
 
   const handleConfigChange = useCallback(
@@ -542,9 +671,9 @@ function WorkflowBuilderInner() {
       setNodes((nds) =>
         nds.map((n) => (n.id === selectedNodeId ? { ...n, data: { ...n.data, config } } : n)),
       );
-      setHasUnsavedChanges(true);
+      markDirty();
     },
-    [selectedNodeId, setNodes],
+    [selectedNodeId, setNodes, markDirty],
   );
 
   const handleNameChange = useCallback(
@@ -552,9 +681,9 @@ function WorkflowBuilderInner() {
       setNodes((nds) =>
         nds.map((n) => (n.id === selectedNodeId ? { ...n, data: { ...n.data, label: name } } : n)),
       );
-      setHasUnsavedChanges(true);
+      markDirty();
     },
-    [selectedNodeId, setNodes],
+    [selectedNodeId, setNodes, markDirty],
   );
 
   const handleWaitForChange = useCallback(
@@ -564,9 +693,9 @@ function WorkflowBuilderInner() {
           n.id === selectedNodeId ? { ...n, data: { ...n.data, waitForStepIds } } : n,
         ),
       );
-      setHasUnsavedChanges(true);
+      markDirty();
     },
-    [selectedNodeId, setNodes],
+    [selectedNodeId, setNodes, markDirty],
   );
 
   const handleBranchChange = useCallback(
@@ -576,9 +705,9 @@ function WorkflowBuilderInner() {
           n.id === selectedNodeId ? { ...n, data: { ...n.data, waitForBranches } } : n,
         ),
       );
-      setHasUnsavedChanges(true);
+      markDirty();
     },
-    [selectedNodeId, setNodes],
+    [selectedNodeId, setNodes, markDirty],
   );
 
   // Only allow select and delete, not position changes
@@ -587,9 +716,9 @@ function WorkflowBuilderInner() {
       onNodesChange(changes);
       const hasMoved = changes.some((c: any) => c.type === 'position');
       const hasRemoved = changes.some((c: any) => c.type === 'remove');
-      if (hasMoved || hasRemoved) setHasUnsavedChanges(true);
+      if (hasMoved || hasRemoved) markDirty();
     },
-    [onNodesChange],
+    [onNodesChange, markDirty],
   );
 
   return (
@@ -605,6 +734,7 @@ function WorkflowBuilderInner() {
                 onAddNote={handleAddNote}
                 onAutoLayout={handleAutoLayout}
                 onOpenSettings={() => setSettingsOpen(true)}
+                onOpenAIChat={() => setAIChatOpen(true)}
                 onExecute={handleExecute}
                 isSaving={saveMutation.isPending}
                 isExecuting={isExecuting}
@@ -627,7 +757,7 @@ function WorkflowBuilderInner() {
                     fitView
                     proOptions={{ hideAttribution: true }}
                     deleteKeyCode={['Backspace', 'Delete']}
-                    onNodesDelete={() => setHasUnsavedChanges(true)}
+                    onNodesDelete={() => markDirty()}
                   >
                     <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
                   </ReactFlow>
@@ -664,7 +794,9 @@ function WorkflowBuilderInner() {
                 events={events}
                 stepResults={stepResults}
                 executionStatus={executionStatus}
+                executionError={executionError}
                 isExecuting={isExecuting}
+                stepInfoMap={stepInfoMap}
                 onStepClick={(stepId) => setSelectedNodeId(stepId)}
                 onDismiss={() => {
                   resetWS();
@@ -683,6 +815,40 @@ function WorkflowBuilderInner() {
             open={settingsOpen}
             onOpenChange={setSettingsOpen}
           />
+          <AIChatPanel
+            open={aiChatOpen}
+            onOpenChange={setAIChatOpen}
+            onWorkflowGenerated={handleAIWorkflowGenerated}
+          />
+          <Dialog open={executeDialogOpen} onOpenChange={setExecuteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Workflow Input</DialogTitle>
+              </DialogHeader>
+              <p className="text-muted-foreground text-sm">
+                This workflow expects input data. Fill in the values below and click Run.
+              </p>
+              <div className="rounded-md border p-3">
+                <JsonBuilder
+                  value={executeInputValue}
+                  onChange={setExecuteInputValue}
+                  rules={RULES_JSON}
+                  emit="values"
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setExecuteDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-green-600 text-white hover:bg-green-700"
+                  onClick={handleExecuteWithInput}
+                >
+                  Run
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </SecretKeysContext.Provider>
       </WorkflowInputSchemaContext.Provider>
     </StepNodesContext.Provider>

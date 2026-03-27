@@ -5,8 +5,8 @@ export class ApiError extends Error {
   code: string;
   details?: Record<string, string>;
 
-  constructor(status: number, code: string, details?: Record<string, string>) {
-    super(code);
+  constructor(status: number, code: string, message?: string, details?: Record<string, string>) {
+    super(message || code);
     this.name = 'ApiError';
     this.status = status;
     this.code = code;
@@ -47,7 +47,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     } catch {
       throw new ApiError(res.status, 'UNKNOWN_ERROR');
     }
-    throw new ApiError(res.status, err.code, err.details);
+    throw new ApiError(res.status, err.code, err.message, err.details);
   }
 
   if (res.status === 204) return undefined as T;

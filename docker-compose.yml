@@ -26,6 +26,7 @@ services:
       PORT: "8080"
       DATABASE_URL: "postgres://postgres:postgres@db:5432/workflow?sslmode=disable"
       JWT_SECRET: "dev-secret-change-me"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
     volumes:
       - .:/app
       - go-mod-cache:/go/pkg/mod

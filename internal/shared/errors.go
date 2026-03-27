@@ -42,6 +42,14 @@ func HTTPStatus(err error) int {
 			return http.StatusForbidden
 		case "EXECUTION_SKIPPED":
 			return http.StatusConflict
+		case "AI_NOT_CONFIGURED":
+			return http.StatusServiceUnavailable
+		case "AI_UNAVAILABLE", "AI_PARSE_ERROR":
+			return http.StatusBadGateway
+		case "AI_TIMEOUT":
+			return http.StatusGatewayTimeout
+		case "AI_INVALID_RESULT":
+			return http.StatusUnprocessableEntity
 		default:
 			return http.StatusInternalServerError
 		}

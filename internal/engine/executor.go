@@ -106,6 +106,11 @@ func (e *Executor) Execute(ctx context.Context, workflowID uuid.UUID, triggerTyp
 		return uuid.Nil, fmt.Errorf("load workflow: %w", err)
 	}
 
+	// Check workflow has steps
+	if len(wf.Edges.Steps) == 0 {
+		return uuid.Nil, fmt.Errorf("workflow has no steps to execute")
+	}
+
 	// Check concurrency policy
 	if wf.Concurrency == entworkflow.ConcurrencySkip {
 		running, err := e.client.WorkflowExecution.Query().
@@ -331,7 +336,7 @@ func (e *Executor) executeDAG(ctx context.Context, wf *ent.Workflow, exec *ent.W
 			}
 
 			if r.result.Error != nil {
-				slog.Warn("step failed", "step", s.Name, "error", r.result.Error)
+				slog.Warn("step failed", "step", s.Name, "step_id", s.ID, "error", r.result.Error)
 
 				// Follow error edges
 				for _, edge := range errorEdges[s.ID] {

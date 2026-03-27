@@ -80,15 +80,20 @@ func ResolveString(s string, ctx *ExecContext) (any, error) {
 	}
 
 	// Multiple expressions or mixed text — interpolate as string
+	var resolveErr error
 	result := expressionPattern.ReplaceAllStringFunc(s, func(match string) string {
 		expr := match[2 : len(match)-2]
 		val, err := ResolveExpression(expr, ctx)
 		if err != nil {
-			return match // leave unresolved
+			resolveErr = fmt.Errorf("expression %s: %w", match, err)
+			return match
 		}
 		return fmt.Sprintf("%v", val)
 	})
 
+	if resolveErr != nil {
+		return nil, resolveErr
+	}
 	return result, nil
 }
 
