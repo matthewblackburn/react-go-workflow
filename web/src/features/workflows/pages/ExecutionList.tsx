@@ -150,8 +150,7 @@ export default function ExecutionList() {
   });
 
   const retryMutation = useMutation({
-    mutationFn: (exec: WorkflowExecution) =>
-      workflowApi.execute(exec.workflow_id, exec.input),
+    mutationFn: (exec: WorkflowExecution) => workflowApi.execute(exec.workflow_id, exec.input),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['executions'] });
       toast.success('Execution restarted');
@@ -218,7 +217,9 @@ export default function ExecutionList() {
         columns={columns}
         data={executions}
         isLoading={isLoading}
-        pagination={data ? { total: data.total, limit: data.limit, offset: data.offset } : undefined}
+        pagination={
+          data ? { total: data.total, limit: data.limit, offset: data.offset } : undefined
+        }
         onPageChange={table.onPageChange}
         onRowClick={(exec) => navigate(`/executions/${exec.id}`)}
         rowActions={{
@@ -227,7 +228,11 @@ export default function ExecutionList() {
             {
               label: 'Retry',
               onClick: (exec) => {
-                if (exec.status === 'completed' || exec.status === 'failed' || exec.status === 'cancelled') {
+                if (
+                  exec.status === 'completed' ||
+                  exec.status === 'failed' ||
+                  exec.status === 'cancelled'
+                ) {
                   retryMutation.mutate(exec);
                 } else {
                   toast.error('Only finished executions can be retried');

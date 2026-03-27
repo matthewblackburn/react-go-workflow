@@ -31,7 +31,8 @@ type Segment =
   | { type: 'text'; value: string }
   | { type: 'ref'; stepId: string; path: string; raw: string; prefix: string };
 
-const COMBINED_REF_REGEX = /\{\{(?:steps\.([^.}]+)\.([^}]*)|workflow\.input(?:\.([^}]*))?|secrets\.([^}]+))\}\}/g;
+const COMBINED_REF_REGEX =
+  /\{\{(?:steps\.([^.}]+)\.([^}]*)|workflow\.input(?:\.([^}]*))?|secrets\.([^}]+))\}\}/g;
 
 function parseSegments(
   value: string,
@@ -192,7 +193,7 @@ export function RefPill({
 
   useEffect(() => {
     setSuggestionIdx(0);
-  }, [suggestions.length]);
+  }, []);
 
   const commitPath = useCallback(
     (newPath: string) => {
@@ -211,118 +212,120 @@ export function RefPill({
     >
       <span className="font-semibold truncate">@{stepName}</span>
       {!onPathChange ? null : (
-      <>
-      <span className="opacity-40">&rarr;</span>
-      {editing ? (
         <>
-          <input
-            ref={pathInputRef}
-            value={editPath}
-            onChange={(e) => {
-              setEditPath(e.target.value);
-              setPathWidth(null);
-              setSuggestionIdx(0);
-            }}
-            onBlur={() => commitPath(editPath)}
-            onKeyDown={(e) => {
-              if (suggestions.length > 0) {
-                if (e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  setSuggestionIdx((i) => Math.min(i + 1, suggestions.length - 1));
-                  return;
-                }
-                if (e.key === 'ArrowUp') {
-                  e.preventDefault();
-                  setSuggestionIdx((i) => Math.max(i - 1, 0));
-                  return;
-                }
-                if (e.key === 'Tab') {
-                  e.preventDefault();
-                  setEditPath(suggestions[suggestionIdx]);
-                  return;
-                }
-              }
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                if (suggestions.length > 0 && suggestions[suggestionIdx]) {
-                  commitPath(suggestions[suggestionIdx]);
-                } else {
-                  commitPath(editPath);
-                }
-              }
-              if (e.key === 'Escape') {
-                setEditing(false);
-                setEditPath(path);
-              }
-              e.stopPropagation();
-            }}
-            className="bg-transparent outline-none font-[inherit] text-[inherit] opacity-70 border-none appearance-none"
-            style={{
-              padding: 0,
-              margin: 0,
-              width:
-                pathWidth && editPath === path
-                  ? `${pathWidth}px`
-                  : `${Math.max(editPath.length, 1)}ch`,
-            }}
-          />
-          {suggestions.length > 0 &&
-            createPortal(
-              <div
-                style={{
-                  position: 'fixed',
-                  top: (pillRef.current?.getBoundingClientRect().bottom ?? 0) + 4,
-                  left: pillRef.current?.getBoundingClientRect().left ?? 0,
+          <span className="opacity-40">&rarr;</span>
+          {editing ? (
+            <>
+              <input
+                ref={pathInputRef}
+                value={editPath}
+                onChange={(e) => {
+                  setEditPath(e.target.value);
+                  setPathWidth(null);
+                  setSuggestionIdx(0);
                 }}
-                className="z-[9999] max-h-32 w-max min-w-[120px] overflow-y-auto rounded-md border bg-popover p-1 shadow-md pointer-events-auto"
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onBlur={() => commitPath(editPath)}
+                onKeyDown={(e) => {
+                  if (suggestions.length > 0) {
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setSuggestionIdx((i) => Math.min(i + 1, suggestions.length - 1));
+                      return;
+                    }
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setSuggestionIdx((i) => Math.max(i - 1, 0));
+                      return;
+                    }
+                    if (e.key === 'Tab') {
+                      e.preventDefault();
+                      setEditPath(suggestions[suggestionIdx]);
+                      return;
+                    }
+                  }
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (suggestions.length > 0 && suggestions[suggestionIdx]) {
+                      commitPath(suggestions[suggestionIdx]);
+                    } else {
+                      commitPath(editPath);
+                    }
+                  }
+                  if (e.key === 'Escape') {
+                    setEditing(false);
+                    setEditPath(path);
+                  }
                   e.stopPropagation();
                 }}
-              >
-                {suggestions.map((s, i) => (
+                className="bg-transparent outline-none font-[inherit] text-[inherit] opacity-70 border-none appearance-none"
+                style={{
+                  padding: 0,
+                  margin: 0,
+                  width:
+                    pathWidth && editPath === path
+                      ? `${pathWidth}px`
+                      : `${Math.max(editPath.length, 1)}ch`,
+                }}
+              />
+              {suggestions.length > 0 &&
+                createPortal(
                   <div
-                    key={s}
+                    style={{
+                      position: 'fixed',
+                      top: (pillRef.current?.getBoundingClientRect().bottom ?? 0) + 4,
+                      left: pillRef.current?.getBoundingClientRect().left ?? 0,
+                    }}
+                    className="z-[9999] max-h-32 w-max min-w-[120px] overflow-y-auto rounded-md border bg-popover p-1 shadow-md pointer-events-auto"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      commitPath(s);
                     }}
-                    className={`flex w-full cursor-pointer rounded-sm px-2 py-1 text-[11px] text-left ${
-                      i === suggestionIdx
-                        ? 'bg-accent text-accent-foreground'
-                        : 'hover:bg-accent hover:text-accent-foreground'
-                    }`}
                   >
-                    {s}
-                  </div>
-                ))}
-              </div>,
-              pillRef.current?.closest('.react-flow') ?? document.body,
-            )}
+                    {suggestions.map((s, i) => (
+                      <div
+                        key={s}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          commitPath(s);
+                        }}
+                        className={`flex w-full cursor-pointer rounded-sm px-2 py-1 text-[11px] text-left ${
+                          i === suggestionIdx
+                            ? 'bg-accent text-accent-foreground'
+                            : 'hover:bg-accent hover:text-accent-foreground'
+                        }`}
+                      >
+                        {s}
+                      </div>
+                    ))}
+                  </div>,
+                  pillRef.current?.closest('.react-flow') ?? document.body,
+                )}
+            </>
+          ) : (
+            <span
+              ref={pathSpanRef}
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (pathSpanRef.current && path) setPathWidth(pathSpanRef.current.offsetWidth);
+                setEditing(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  if (pathSpanRef.current && path) setPathWidth(pathSpanRef.current.offsetWidth);
+                  setEditing(true);
+                }
+              }}
+              className="opacity-60 hover:opacity-100 cursor-text min-w-[2ch] truncate"
+            >
+              {path || (
+                <span className={pillAccentColors[prefix] ?? pillAccentColors.steps}>path</span>
+              )}
+            </span>
+          )}
         </>
-      ) : (
-        <span
-          ref={pathSpanRef}
-          role="button"
-          tabIndex={0}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (pathSpanRef.current && path) setPathWidth(pathSpanRef.current.offsetWidth);
-            setEditing(true);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              if (pathSpanRef.current && path) setPathWidth(pathSpanRef.current.offsetWidth);
-              setEditing(true);
-            }
-          }}
-          className="opacity-60 hover:opacity-100 cursor-text min-w-[2ch] truncate"
-        >
-          {path || <span className={pillAccentColors[prefix] ?? pillAccentColors.steps}>path</span>}
-        </span>
-      )}
-      </>
       )}
       <button
         type="button"
@@ -422,10 +425,9 @@ export function StepReferenceInput({
     return mentionItems.filter((s) => s.label.toLowerCase().includes(lower));
   }, [mentionItems, mentionFilter]);
 
-  const filteredCount = filteredSteps.length;
   useEffect(() => {
     setMentionIndex(0);
-  }, [filteredCount]);
+  }, []);
 
   const removeRef = useCallback(
     (segIndex: number) => {
@@ -602,7 +604,12 @@ export function StepReferenceInput({
               seg.prefix === 'workflow'
                 ? resolvedInputSchema
                 : seg.prefix === 'secrets'
-                  ? { type: 'object', properties: Object.fromEntries(secretKeys.map((k) => [k, { type: 'string' }])) }
+                  ? {
+                      type: 'object',
+                      properties: Object.fromEntries(
+                        secretKeys.map((k) => [k, { type: 'string' }]),
+                      ),
+                    }
                   : idToSchema.get(seg.stepId);
             const path = seg.prefix === 'secrets' ? seg.stepId : seg.path;
             const segIdx = segments.indexOf(seg);
@@ -614,14 +621,20 @@ export function StepReferenceInput({
                 path={path}
                 pathPrefix={seg.prefix === 'secrets' || seg.prefix === 'workflow' ? '' : 'output'}
                 outputSchema={schema}
-                onPathChange={seg.prefix === 'secrets'
-                  ? (newKey) => {
-                      // Rebuild the secret ref with the new key
-                      const newSegments = [...segments];
-                      newSegments[segIdx] = { ...seg, stepId: newKey, raw: `{{secrets.${newKey}}}` };
-                      onChange(serializeSegments(newSegments));
-                    }
-                  : (newPath) => updateRefPath(segIdx, newPath)}
+                onPathChange={
+                  seg.prefix === 'secrets'
+                    ? (newKey) => {
+                        // Rebuild the secret ref with the new key
+                        const newSegments = [...segments];
+                        newSegments[segIdx] = {
+                          ...seg,
+                          stepId: newKey,
+                          raw: `{{secrets.${newKey}}}`,
+                        };
+                        onChange(serializeSegments(newSegments));
+                      }
+                    : (newPath) => updateRefPath(segIdx, newPath)
+                }
                 onRemove={() => removeRef(segIdx)}
               />
             );

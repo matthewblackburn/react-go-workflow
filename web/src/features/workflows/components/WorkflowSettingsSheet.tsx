@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell,
+  Braces,
   ChevronDown,
   Circle,
   CircleCheck,
@@ -10,20 +11,28 @@ import {
   Database,
   ExternalLink,
   Globe,
+  Key,
   Loader2,
   Play,
   Save,
+  Workflow as WorkflowIcon,
 } from 'lucide-react';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Braces, Key, Workflow as WorkflowIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { executionApi, workflowApi } from '@/api/workflows';
 import { JsonViewer } from '@/components/editors/CodeEditor';
+import {
+  JsonBuilder,
+  RULES_OUTPUT,
+  type ValueMenuItem,
+} from '@/components/json-builder/JsonBuilder';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -31,14 +40,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import type { Workflow, WorkflowExecution } from '@/types/workflow';
 import { CronBuilder } from './CronBuilder';
-import { JsonBuilder, RULES_OUTPUT, type ValueMenuItem } from '@/components/json-builder/JsonBuilder';
 import { SecretKeysContext, StepNodesContext, WorkflowInputSchemaContext } from './StepNode';
 import { RefPill } from './StepReferenceInput';
 import { TableSelect } from './TableSelect';
@@ -775,7 +781,13 @@ function OutputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => v
             </code>
             . When triggered via a synchronous webhook, this is returned in the response.
           </p>
-          <JsonBuilder value={outputSchema} onChange={setOutputSchema} rules={RULES_OUTPUT} emit="values" valueMenuItems={valueMenuItems} />
+          <JsonBuilder
+            value={outputSchema}
+            onChange={setOutputSchema}
+            rules={RULES_OUTPUT}
+            emit="values"
+            valueMenuItems={valueMenuItems}
+          />
         </div>
       </ScrollArea>
       <div className="border-t p-4">
@@ -851,9 +863,7 @@ function NotificationsTab({ workflow, onSaved }: { workflow: Workflow; onSaved: 
   });
 
   function updateSetting(channel: string, updates: Partial<(typeof settings)[0]>) {
-    setSettings((prev) =>
-      prev.map((s) => (s.channel === channel ? { ...s, ...updates } : s)),
-    );
+    setSettings((prev) => prev.map((s) => (s.channel === channel ? { ...s, ...updates } : s)));
   }
 
   const channelLabels: Record<string, string> = {

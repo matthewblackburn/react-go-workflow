@@ -20,8 +20,7 @@ export default function SecretEdit() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: { value?: string; description?: string }) =>
-      secretApi.update(id!, data),
+    mutationFn: (data: { value?: string; description?: string }) => secretApi.update(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['secrets'] });
       queryClient.invalidateQueries({ queryKey: ['secret', id] });
@@ -94,7 +93,8 @@ export default function SecretEdit() {
               autoComplete="off"
             />
             <p className="text-xs text-muted-foreground">
-              Secret values are encrypted and cannot be viewed. Enter a new value to replace the existing one.
+              Secret values are encrypted and cannot be viewed. Enter a new value to replace the
+              existing one.
             </p>
           </div>
 

@@ -22,9 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTableState } from '@/hooks/useTableState';
 import type { Secret } from '@/types/secret';
 
-const FILTER_CONFIG: FilterFieldConfig[] = [
-  { field: 'search', label: 'Key', type: 'text' },
-];
+const FILTER_CONFIG: FilterFieldConfig[] = [{ field: 'search', label: 'Key', type: 'text' }];
 
 const columns: ColumnDef<Secret, unknown>[] = [
   {
@@ -184,7 +182,9 @@ export default function SecretList() {
         columns={columns}
         data={secrets}
         isLoading={isLoading}
-        pagination={data ? { total: data.total, limit: data.limit, offset: data.offset } : undefined}
+        pagination={
+          data ? { total: data.total, limit: data.limit, offset: data.offset } : undefined
+        }
         onPageChange={table.onPageChange}
         onRowClick={(s) => navigate(`/secrets/${s.id}`)}
         bulkActions={bulkActions}

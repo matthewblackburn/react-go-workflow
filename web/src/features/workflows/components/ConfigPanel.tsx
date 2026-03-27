@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { CircleCheck, CircleX, Loader2, Plus, Trash2, X } from 'lucide-react';
+import { workflowApi } from '@/api/workflows';
 import { JsonViewer } from '@/components/editors/CodeEditor';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,7 +16,6 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { workflowApi } from '@/api/workflows';
 import type { StepResult } from '@/hooks/useExecutionWS';
 import type { StepType, Workflow } from '@/types/workflow';
 import { StepReferenceInput } from './StepReferenceInput';
@@ -292,13 +292,7 @@ function StringArrayEditor({
 
 // ── Workflow picker (for sub_workflow) ──
 
-function WorkflowPicker({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-}) {
+function WorkflowPicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const { data } = useQuery({
     queryKey: ['workflows-picker'],
     queryFn: () => workflowApi.list({ limit: 100 }),
@@ -417,8 +411,7 @@ function ConfigureContent({
         const hasAdditionalProps = fieldType === 'object' && field.additionalProperties;
 
         // Array of strings → string list editor
-        const isStringArray =
-          fieldType === 'array' && field.items?.type === 'string';
+        const isStringArray = fieldType === 'array' && field.items?.type === 'string';
 
         // Workflow picker
         const isWorkflowPicker = format === 'workflow-picker';
@@ -442,10 +435,7 @@ function ConfigureContent({
               {title}
             </Label>
             {isWorkflowPicker ? (
-              <WorkflowPicker
-                value={String(currentValue)}
-                onChange={(v) => updateField(key, v)}
-              />
+              <WorkflowPicker value={String(currentValue)} onChange={(v) => updateField(key, v)} />
             ) : hasAdditionalProps ? (
               <KeyValueEditor
                 value={(config[key] as Record<string, string>) ?? {}}

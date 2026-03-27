@@ -4,8 +4,13 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { workflowApi } from '@/api/workflows';
-import { JsonBuilder, RULES_JSON, treeToJson, schemaToTree } from '@/components/json-builder/JsonBuilder';
 import { JsonViewer } from '@/components/editors/CodeEditor';
+import {
+  JsonBuilder,
+  RULES_JSON,
+  schemaToTree,
+  treeToJson,
+} from '@/components/json-builder/JsonBuilder';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -38,9 +43,8 @@ export default function WebhookTest() {
   const baseWebhookUrl = selectedWorkflow
     ? `${window.location.origin}/webhooks/${selectedWorkflow.webhook_slug}`
     : '';
-  const webhookUrl = waitForResult && baseWebhookUrl
-    ? `${baseWebhookUrl}?wait=true`
-    : baseWebhookUrl;
+  const webhookUrl =
+    waitForResult && baseWebhookUrl ? `${baseWebhookUrl}?wait=true` : baseWebhookUrl;
 
   const handleSelect = useCallback(
     (id: string) => {
@@ -109,7 +113,7 @@ export default function WebhookTest() {
       <div className="space-y-6">
         {/* Workflow selector */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Workflow</label>
+          <span className="text-sm font-medium">Workflow</span>
           <Select value={selectedId ?? ''} onValueChange={handleSelect}>
             <SelectTrigger>
               <SelectValue placeholder="Select a webhook-enabled workflow..." />
@@ -134,7 +138,7 @@ export default function WebhookTest() {
           <>
             {/* Webhook URL */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Webhook URL</label>
+              <span className="text-sm font-medium">Webhook URL</span>
               <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
                 <code className="flex-1 text-sm font-mono truncate">{webhookUrl}</code>
                 <button
@@ -152,7 +156,7 @@ export default function WebhookTest() {
 
             {/* Input builder */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Input Payload</label>
+              <span className="text-sm font-medium">Input Payload</span>
               <div className="rounded-md border p-3">
                 {selectedWorkflow.input_schema ? (
                   <JsonBuilder
@@ -163,8 +167,8 @@ export default function WebhookTest() {
                   />
                 ) : (
                   <p className="text-sm text-muted-foreground italic">
-                    This workflow has no input schema defined. The webhook will be sent with an empty
-                    payload.
+                    This workflow has no input schema defined. The webhook will be sent with an
+                    empty payload.
                   </p>
                 )}
               </div>
@@ -184,15 +188,20 @@ export default function WebhookTest() {
               </div>
               {waitForResult && (
                 <p className="text-xs text-muted-foreground">
-                  The request will wait up to 30 seconds for the workflow to complete and return the output.
+                  The request will wait up to 30 seconds for the workflow to complete and return the
+                  output.
                 </p>
               )}
               <div className="flex items-center gap-3">
                 <Button onClick={handleSend} disabled={sending}>
                   <Play className="mr-2 h-4 w-4" />
                   {sending
-                    ? waitForResult ? 'Waiting...' : 'Sending...'
-                    : waitForResult ? 'Send & Wait' : 'Send Webhook'}
+                    ? waitForResult
+                      ? 'Waiting...'
+                      : 'Sending...'
+                    : waitForResult
+                      ? 'Send & Wait'
+                      : 'Send Webhook'}
                 </Button>
                 <Button variant="outline" onClick={handleCopyCurl}>
                   <Terminal className="mr-2 h-4 w-4" />
@@ -204,12 +213,12 @@ export default function WebhookTest() {
             {/* Response */}
             {response && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">
+                <span className="text-sm font-medium">
                   Response
                   {response.error && (
                     <span className="ml-2 text-xs text-red-500">{response.error}</span>
                   )}
-                </label>
+                </span>
                 <div className="rounded-md border overflow-hidden">
                   {response.data ? (
                     <JsonViewer data={response.data} maxHeight="200px" />

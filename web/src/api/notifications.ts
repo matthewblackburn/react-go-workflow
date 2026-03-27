@@ -1,6 +1,6 @@
 import type { AppNotification } from '@/types/workflow';
-import type { PaginatedResponse } from './workflows';
 import { api } from './client';
+import type { PaginatedResponse } from './workflows';
 
 export const notificationApi = {
   list: (params?: Record<string, string | number | undefined>) =>

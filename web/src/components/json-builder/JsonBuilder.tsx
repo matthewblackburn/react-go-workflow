@@ -36,18 +36,33 @@ export interface ValueMenuItem {
 }
 
 export const RULES_SCHEMA: JsonBuilderRules = {
-  showKey: true, editableKey: true, showValue: false, editableValue: false,
-  canAddFields: true, canRemoveFields: true, canChangeType: true,
+  showKey: true,
+  editableKey: true,
+  showValue: false,
+  editableValue: false,
+  canAddFields: true,
+  canRemoveFields: true,
+  canChangeType: true,
 };
 
 export const RULES_JSON: JsonBuilderRules = {
-  showKey: true, editableKey: false, showValue: true, editableValue: true,
-  canAddFields: false, canRemoveFields: false, canChangeType: false,
+  showKey: true,
+  editableKey: false,
+  showValue: true,
+  editableValue: true,
+  canAddFields: false,
+  canRemoveFields: false,
+  canChangeType: false,
 };
 
 export const RULES_OUTPUT: JsonBuilderRules = {
-  showKey: true, editableKey: true, showValue: true, editableValue: true,
-  canAddFields: true, canRemoveFields: true, canChangeType: true,
+  showKey: true,
+  editableKey: true,
+  showValue: true,
+  editableValue: true,
+  canAddFields: true,
+  canRemoveFields: true,
+  canChangeType: true,
 };
 
 type EmitMode = 'schema' | 'values';
@@ -91,7 +106,10 @@ function getType(type: string) {
 }
 
 /** Returns the matched menu item for the current field value, or undefined */
-function getMatchedMenuItem(field: SchemaField, valueMenuItems?: ValueMenuItem[]): ValueMenuItem | undefined {
+function getMatchedMenuItem(
+  field: SchemaField,
+  valueMenuItems?: ValueMenuItem[],
+): ValueMenuItem | undefined {
   if (!valueMenuItems || field.type !== 'string') return undefined;
   return valueMenuItems.find((mi) => mi.match(String(field.default ?? '')));
 }
@@ -147,7 +165,9 @@ function TypePickerPopup({
           >
             <span className={`h-2.5 w-2.5 rounded-full ${t.dot}`} />
             <span className="flex-1 text-left">{t.label}</span>
-            {t.value === value && !activeMenuItemLabel && <Check className="h-3 w-3 text-muted-foreground" />}
+            {t.value === value && !activeMenuItemLabel && (
+              <Check className="h-3 w-3 text-muted-foreground" />
+            )}
           </button>
         ))}
         {valueMenuItems && valueMenuItems.length > 0 && onMenuItemSelect && (
@@ -162,9 +182,13 @@ function TypePickerPopup({
                 }}
                 className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-accent"
               >
-                <span className="h-2.5 w-2.5 flex items-center justify-center shrink-0">{mi.icon}</span>
+                <span className="h-2.5 w-2.5 flex items-center justify-center shrink-0">
+                  {mi.icon}
+                </span>
                 <span className="flex-1 text-left">{mi.label}</span>
-                {mi.label === activeMenuItemLabel && <Check className="h-3 w-3 text-muted-foreground" />}
+                {mi.label === activeMenuItemLabel && (
+                  <Check className="h-3 w-3 text-muted-foreground" />
+                )}
               </button>
             ))}
           </>
@@ -365,11 +389,17 @@ function CollapsedValue({
       onClick={onEdit}
       className="rounded px-1.5 h-5 text-[11px] leading-5 text-muted-foreground hover:bg-muted/50 transition-colors ml-1 truncate"
     >
-      {field.type === 'boolean'
-        ? (field.default ? 'true' : 'false')
-        : field.default !== undefined && field.default !== ''
-          ? String(field.default)
-          : <span className="italic">empty</span>}
+      {field.type === 'boolean' ? (
+        field.default ? (
+          'true'
+        ) : (
+          'false'
+        )
+      ) : field.default !== undefined && field.default !== '' ? (
+        String(field.default)
+      ) : (
+        <span className="italic">empty</span>
+      )}
     </button>
   );
 }
@@ -411,9 +441,7 @@ function ValueInput({
         ref={valueRef}
         type="number"
         value={field.default ?? ''}
-        onChange={(e) =>
-          update({ default: e.target.value ? Number(e.target.value) : undefined })
-        }
+        onChange={(e) => update({ default: e.target.value ? Number(e.target.value) : undefined })}
         placeholder="value"
         className="!h-5 !text-[11px] !min-h-0 !py-0 !shadow-none !border-0 !leading-5 w-16 bg-muted/30 px-1.5 rounded focus-visible:ring-0 focus-visible:bg-muted/50 shrink-0"
       />
@@ -536,7 +564,9 @@ function FieldRow({
               {matchedMenuItem ? matchedMenuItem.icon : typeInfo.letter}
             </button>
           ) : (
-            <span className={`h-5 w-5 rounded flex items-center justify-center text-[9px] font-bold shrink-0 ${matchedMenuItem ? '' : `${typeInfo.dot}/15 ${typeInfo.text}`}`}>
+            <span
+              className={`h-5 w-5 rounded flex items-center justify-center text-[9px] font-bold shrink-0 ${matchedMenuItem ? '' : `${typeInfo.dot}/15 ${typeInfo.text}`}`}
+            >
               {matchedMenuItem ? matchedMenuItem.icon : typeInfo.letter}
             </span>
           )}
@@ -556,7 +586,9 @@ function FieldRow({
               {field.name || <span className="text-muted-foreground italic">unnamed</span>}
             </button>
           ) : (
-            <span className={`px-1.5 h-5 text-[11px] leading-5 font-mono text-foreground truncate ${isDuplicate ? 'text-red-500' : ''}`}>
+            <span
+              className={`px-1.5 h-5 text-[11px] leading-5 font-mono text-foreground truncate ${isDuplicate ? 'text-red-500' : ''}`}
+            >
               {field.name}
             </span>
           )}
@@ -618,10 +650,23 @@ function FieldRow({
 
         {/* Children */}
         {expanded && field.type === 'object' && (
-          <ObjectChildren field={field} childNames={childNames} depth={depth} onChange={onChange} rules={rules} valueMenuItems={valueMenuItems} />
+          <ObjectChildren
+            field={field}
+            childNames={childNames}
+            depth={depth}
+            onChange={onChange}
+            rules={rules}
+            valueMenuItems={valueMenuItems}
+          />
         )}
         {expanded && field.type === 'array' && field.items && (
-          <ArrayChildren field={field} depth={depth} onChange={onChange} rules={rules} valueMenuItems={valueMenuItems} />
+          <ArrayChildren
+            field={field}
+            depth={depth}
+            onChange={onChange}
+            rules={rules}
+            valueMenuItems={valueMenuItems}
+          />
         )}
       </div>
     );
@@ -641,9 +686,11 @@ function FieldRow({
       >
         {depth > 0 && <TreeConnector />}
         {/* Type indicator */}
-        {!isArrayItem && (
-          !rules.canChangeType ? (
-            <span className={`h-5 w-5 rounded flex items-center justify-center text-[9px] font-bold shrink-0 ${matchedMenuItem ? '' : `${typeInfo.dot}/15 ${typeInfo.text}`}`}>
+        {!isArrayItem &&
+          (!rules.canChangeType ? (
+            <span
+              className={`h-5 w-5 rounded flex items-center justify-center text-[9px] font-bold shrink-0 ${matchedMenuItem ? '' : `${typeInfo.dot}/15 ${typeInfo.text}`}`}
+            >
               {matchedMenuItem ? matchedMenuItem.icon : typeInfo.letter}
             </span>
           ) : (
@@ -658,14 +705,15 @@ function FieldRow({
             >
               {matchedMenuItem ? matchedMenuItem.icon : typeInfo.letter}
             </button>
-          )
-        )}
+          ))}
 
         {/* Name input or array item label */}
         {isArrayItem ? (
           <span className="text-[11px] text-muted-foreground italic shrink-0 pl-1">items</span>
         ) : !rules.editableKey ? (
-          <span className="text-[11px] font-mono text-foreground px-1.5 shrink-0">{field.name}</span>
+          <span className="text-[11px] font-mono text-foreground px-1.5 shrink-0">
+            {field.name}
+          </span>
         ) : (
           <Input
             ref={nameRef}
@@ -684,21 +732,19 @@ function FieldRow({
 
         {/* Type selector for array items (schema mode only) */}
         {isArrayItem && !!rules.canChangeType && (
-          <>
-            <button
-              ref={typeRef}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setTypePickerOpen(true);
-              }}
-              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] hover:bg-muted transition-colors shrink-0"
-            >
-              <span className={`h-2 w-2 rounded-full ${typeInfo.dot}`} />
-              <span>{typeInfo.label}</span>
-              <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
-            </button>
-          </>
+          <button
+            ref={typeRef}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setTypePickerOpen(true);
+            }}
+            className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] hover:bg-muted transition-colors shrink-0"
+          >
+            <span className={`h-2 w-2 rounded-full ${typeInfo.dot}`} />
+            <span>{typeInfo.label}</span>
+            <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
+          </button>
         )}
 
         {/* Value inputs — shown in JSON and output modes */}
@@ -749,10 +795,23 @@ function FieldRow({
 
       {/* Children */}
       {expanded && field.type === 'object' && (
-        <ObjectChildren field={field} childNames={childNames} depth={depth} onChange={onChange} rules={rules} valueMenuItems={valueMenuItems} />
+        <ObjectChildren
+          field={field}
+          childNames={childNames}
+          depth={depth}
+          onChange={onChange}
+          rules={rules}
+          valueMenuItems={valueMenuItems}
+        />
       )}
       {expanded && field.type === 'array' && field.items && (
-        <ArrayChildren field={field} depth={depth} onChange={onChange} rules={rules} valueMenuItems={valueMenuItems} />
+        <ArrayChildren
+          field={field}
+          depth={depth}
+          onChange={onChange}
+          rules={rules}
+          valueMenuItems={valueMenuItems}
+        />
       )}
     </div>
   );
@@ -809,14 +868,17 @@ function ObjectChildren({
               field={child}
               siblingNames={childNames}
               depth={depth + 1}
-              rules={rules} valueMenuItems={valueMenuItems}
+              rules={rules}
+              valueMenuItems={valueMenuItems}
               onChange={(c) => {
                 const next = [...children];
                 next[i] = c;
                 onChange({ ...field, properties: next });
               }}
-              onRemove={!rules.canRemoveFields ? undefined : () =>
-                onChange({ ...field, properties: children.filter((_, j) => j !== i) })
+              onRemove={
+                !rules.canRemoveFields
+                  ? undefined
+                  : () => onChange({ ...field, properties: children.filter((_, j) => j !== i) })
               }
             />
           </div>
@@ -839,14 +901,20 @@ function ObjectChildren({
               onSelect={(t) => {
                 const newField: SchemaField = { name: '', type: t, description: '' };
                 if (t === 'object') newField.properties = [];
-                if (t === 'array') newField.items = { name: 'items', type: 'string', description: '' };
+                if (t === 'array')
+                  newField.items = { name: 'items', type: 'string', description: '' };
                 onChange({ ...field, properties: [...(field.properties ?? []), newField] });
                 setAddPickerOpen(false);
               }}
               onClose={() => setAddPickerOpen(false)}
               valueMenuItems={valueMenuItems}
               onMenuItemSelect={(mi) => {
-                const newField: SchemaField = { name: '', type: 'string', description: '', default: mi.seed ?? '{{' };
+                const newField: SchemaField = {
+                  name: '',
+                  type: 'string',
+                  description: '',
+                  default: mi.seed ?? '{{',
+                };
                 onChange({ ...field, properties: [...(field.properties ?? []), newField] });
                 setAddPickerOpen(false);
               }}
@@ -879,7 +947,8 @@ function ArrayChildren({
           field={field.items!}
           isArrayItem
           depth={depth + 1}
-          rules={rules} valueMenuItems={valueMenuItems}
+          rules={rules}
+          valueMenuItems={valueMenuItems}
           onChange={(items) => onChange({ ...field, items })}
         />
       </div>
@@ -960,13 +1029,18 @@ export function JsonBuilder({
           key={i}
           field={field}
           siblingNames={fieldNames}
-          rules={rules} valueMenuItems={valueMenuItems}
+          rules={rules}
+          valueMenuItems={valueMenuItems}
           onChange={(f) => {
             const next = [...fields];
             next[i] = f;
             updateAndEmit(next);
           }}
-          onRemove={!rules.canRemoveFields ? undefined : () => updateAndEmit(fields.filter((_, j) => j !== i))}
+          onRemove={
+            !rules.canRemoveFields
+              ? undefined
+              : () => updateAndEmit(fields.filter((_, j) => j !== i))
+          }
         />
       ))}
 
@@ -1015,14 +1089,20 @@ export function JsonBuilder({
               onSelect={(t) => {
                 const newField: SchemaField = { name: '', type: t, description: '' };
                 if (t === 'object') newField.properties = [];
-                if (t === 'array') newField.items = { name: 'items', type: 'string', description: '' };
+                if (t === 'array')
+                  newField.items = { name: 'items', type: 'string', description: '' };
                 updateAndEmit([...fields, newField]);
                 setAddPickerOpen(false);
               }}
               onClose={() => setAddPickerOpen(false)}
               valueMenuItems={valueMenuItems}
               onMenuItemSelect={(mi) => {
-                const newField: SchemaField = { name: '', type: 'string', description: '', default: mi.seed ?? '{{' };
+                const newField: SchemaField = {
+                  name: '',
+                  type: 'string',
+                  description: '',
+                  default: mi.seed ?? '{{',
+                };
                 updateAndEmit([...fields, newField]);
                 setAddPickerOpen(false);
               }}

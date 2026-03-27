@@ -70,7 +70,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
     if (!value) {
       onChange('0 9 * * *');
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [onChange, value]); // eslint-disable-line react-hooks/exhaustive-deps
   const [mode, setMode] = useState<'builder' | 'custom'>(
     value && detectFrequency(value) === 'custom' ? 'custom' : 'builder',
   );

@@ -158,22 +158,20 @@ function StepNodeComponent({ id, data, selected }: NodeProps & { data: StepNodeD
       )}
 
       {hasMultipleOutputs ? (
-        <>
-          {outputs.map((output, i) => (
-            <Handle
-              key={output.name}
-              type="source"
-              position={Position.Right}
-              id={output.name}
-              isConnectable={false}
-              className="!h-3 !w-3 !border-2"
-              style={{
-                top: `${((i + 1) / (outputs.length + 1)) * 100}%`,
-                backgroundColor: output.color ?? 'hsl(var(--background))',
-              }}
-            />
-          ))}
-        </>
+        outputs.map((output, i) => (
+          <Handle
+            key={output.name}
+            type="source"
+            position={Position.Right}
+            id={output.name}
+            isConnectable={false}
+            className="!h-3 !w-3 !border-2"
+            style={{
+              top: `${((i + 1) / (outputs.length + 1)) * 100}%`,
+              backgroundColor: output.color ?? 'hsl(var(--background))',
+            }}
+          />
+        ))
       ) : (
         <Handle
           type="source"

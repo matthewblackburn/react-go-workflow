@@ -48,7 +48,8 @@ export const executionApi = {
 
   get: (id: string) => api.get<WorkflowExecution>(`/v1/executions/${id}`),
 
-  cancel: (id: string) => api.post<{ message: string; status: string }>(`/v1/executions/${id}/cancel`, {}),
+  cancel: (id: string) =>
+    api.post<{ message: string; status: string }>(`/v1/executions/${id}/cancel`, {}),
 };
 
 export interface ActiveCron {

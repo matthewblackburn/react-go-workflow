@@ -181,7 +181,12 @@ export function StepExecutionPanel({
         </div>
       </ScrollArea>
 
-      <Dialog open={!!modalData} onOpenChange={(open) => { if (!open) setModalData(null); }}>
+      <Dialog
+        open={!!modalData}
+        onOpenChange={(open) => {
+          if (!open) setModalData(null);
+        }}
+      >
         <DialogContent className="w-[90vw] sm:max-w-4xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-sm">{modalData?.title}</DialogTitle>

@@ -16,7 +16,6 @@ import { applyExecutionStyles } from '../utils/executionStyles';
 import { LabeledEdge } from './LabeledEdge';
 import { ReadOnlyContext, StepNode, type StepNodeData } from './StepNode';
 
-
 const nodeTypes = { stepNode: StepNode };
 const edgeTypes = { labeled: LabeledEdge };
 
@@ -39,7 +38,12 @@ interface ExecutionCanvasProps {
   onPaneClick?: () => void;
 }
 
-function ExecutionCanvasInner({ workflow, stepStatuses, onNodeClick, onPaneClick }: ExecutionCanvasProps) {
+function ExecutionCanvasInner({
+  workflow,
+  stepStatuses,
+  onNodeClick,
+  onPaneClick,
+}: ExecutionCanvasProps) {
   // Build nodes and edges from workflow data, layout synchronously (like WorkflowBuilder)
   const { initialNodes, initialEdges } = useMemo(() => {
     const steps = (workflow.edges?.steps ?? []) as WorkflowStep[];

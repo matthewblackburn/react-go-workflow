@@ -1,9 +1,9 @@
 import {
   type ColumnDef,
   type ColumnResizeMode,
-  type RowSelectionState,
   flexRender,
   getCoreRowModel,
+  type RowSelectionState,
   useReactTable,
 } from '@tanstack/react-table';
 import {
@@ -200,7 +200,10 @@ function FilterInput({
 function ActionsCell<T extends { id: string | number }>({
   row,
   config,
-}: { row: T; config: RowActionsConfig<T> }) {
+}: {
+  row: T;
+  config: RowActionsConfig<T>;
+}) {
   const navigate = useNavigate();
   return (
     <DropdownMenu>
@@ -505,13 +508,20 @@ export function DataGrid<T extends { id: string | number }>({
           {isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={`skel-tile-${String(i)}`} className="h-40 animate-pulse rounded-lg border bg-muted" />
+                <div
+                  key={`skel-tile-${String(i)}`}
+                  className="h-40 animate-pulse rounded-lg border bg-muted"
+                />
               ))}
             </div>
           ) : data.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {data.map((item) => (
-                <div key={String(item.id)} onClick={onRowClick ? () => onRowClick(item) : undefined} className={onRowClick ? 'cursor-pointer' : ''}>
+                <div
+                  key={String(item.id)}
+                  onClick={onRowClick ? () => onRowClick(item) : undefined}
+                  className={onRowClick ? 'cursor-pointer' : ''}
+                >
                   {tileRenderer(item)}
                 </div>
               ))}
@@ -523,87 +533,95 @@ export function DataGrid<T extends { id: string | number }>({
           )}
         </div>
       ) : (
-      <div className="min-h-0 flex-1 overflow-auto px-6">
-        <div className="overflow-auto rounded-md border h-full">
-        <Table
-          style={
-            enableResizing
-              ? {
-                  width: Math.max(table.getCenterTotalSize(), 0),
-                  minWidth: '100%',
-                  tableLayout: 'fixed',
-                }
-              : undefined
-          }
-        >
-          <TableHeader className="sticky top-0 z-40 bg-background">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header, idx) => (
-                  <TableHead
-                    key={header.id}
-                    className={`${cellClassName(idx, true)} relative`}
-                    style={{
-                      width: header.getSize(),
-                      ...(hasSelect && idx === 0 ? { position: 'sticky', left: 0, zIndex: 50 } : {}),
-                    }}
-                  >
-                    {renderHeader(header, idx)}
-                    {enableResizing && header.column.getCanResize() && (
-                      <div
-                        onMouseDown={header.getResizeHandler()}
-                        onTouchStart={header.getResizeHandler()}
-                        className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none ${
-                          header.column.getIsResizing() ? 'bg-primary' : 'hover:bg-border'
-                        }`}
-                      />
-                    )}
-                  </TableHead>
+        <div className="min-h-0 flex-1 overflow-auto px-6">
+          <div className="overflow-auto rounded-md border h-full">
+            <Table
+              style={
+                enableResizing
+                  ? {
+                      width: Math.max(table.getCenterTotalSize(), 0),
+                      minWidth: '100%',
+                      tableLayout: 'fixed',
+                    }
+                  : undefined
+              }
+            >
+              <TableHeader className="sticky top-0 z-40 bg-background">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header, idx) => (
+                      <TableHead
+                        key={header.id}
+                        className={`${cellClassName(idx, true)} relative`}
+                        style={{
+                          width: header.getSize(),
+                          ...(hasSelect && idx === 0
+                            ? { position: 'sticky', left: 0, zIndex: 50 }
+                            : {}),
+                        }}
+                      >
+                        {renderHeader(header, idx)}
+                        {enableResizing && header.column.getCanResize() && (
+                          <div
+                            onMouseDown={header.getResizeHandler()}
+                            onTouchStart={header.getResizeHandler()}
+                            className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none ${
+                              header.column.getIsResizing() ? 'bg-primary' : 'hover:bg-border'
+                            }`}
+                          />
+                        )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
                 ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={`skel-${String(i)}`}>
-                  {allColumns.map((_, j) => (
-                    <TableCell key={`skel-${String(i)}-${String(j)}`} className={cellClassName(j, false)}>
-                      <div className="h-4 w-full animate-pulse rounded bg-muted" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className={`group hover:bg-muted/50 ${onRowClick ? 'cursor-pointer' : ''}`}
-                  data-state={row.getIsSelected() && 'selected'}
-                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                >
-                  {row.getVisibleCells().map((cell, idx) => (
-                    <TableCell
-                      key={cell.id}
-                      className={`${cellClassName(idx, false)}${cell.column.getCanResize() ? ' overflow-hidden truncate' : ''}`}
-                      style={enableResizing ? { width: cell.column.getSize() } : undefined}
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={`skel-${String(i)}`}>
+                      {allColumns.map((_, j) => (
+                        <TableCell
+                          key={`skel-${String(i)}-${String(j)}`}
+                          className={cellClassName(j, false)}
+                        >
+                          <div className="h-4 w-full animate-pulse rounded bg-muted" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : table.getRowModel().rows.length > 0 ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      className={`group hover:bg-muted/50 ${onRowClick ? 'cursor-pointer' : ''}`}
+                      data-state={row.getIsSelected() && 'selected'}
+                      onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                     >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {row.getVisibleCells().map((cell, idx) => (
+                        <TableCell
+                          key={cell.id}
+                          className={`${cellClassName(idx, false)}${cell.column.getCanResize() ? ' overflow-hidden truncate' : ''}`}
+                          style={enableResizing ? { width: cell.column.getSize() } : undefined}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={allColumns.length}
+                      className="h-24 text-center text-muted-foreground"
+                    >
+                      {emptyMessage}
                     </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={allColumns.length} className="h-24 text-center text-muted-foreground">
-                  {emptyMessage}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
-      </div>
       )}
 
       {/* Pagination */}

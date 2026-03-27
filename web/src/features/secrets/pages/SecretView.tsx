@@ -107,7 +107,9 @@ export default function SecretView() {
           </div>
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm font-medium text-muted-foreground">Value</span>
-            <Badge variant="secondary" className="font-mono">••••••••</Badge>
+            <Badge variant="secondary" className="font-mono">
+              ••••••••
+            </Badge>
           </div>
           {secret.description && (
             <div className="flex items-center justify-between px-4 py-3">
@@ -135,7 +137,8 @@ export default function SecretView() {
             <span className="text-sm font-medium text-muted-foreground">Usage</span>
             <div className="flex items-center gap-2">
               <code className="rounded bg-muted px-2 py-0.5 text-xs font-mono">
-                {'{{'}secrets.{secret.key}{'}}'}
+                {'{{'}secrets.{secret.key}
+                {'}}'}
               </code>
               <button
                 type="button"

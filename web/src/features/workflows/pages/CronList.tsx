@@ -58,10 +58,7 @@ export default function CronList() {
     refetchInterval: 15000,
   });
 
-  const rows = useMemo(
-    () => (data?.data ?? []).map((c) => ({ ...c, id: c.workflow_id })),
-    [data],
-  );
+  const rows = useMemo(() => (data?.data ?? []).map((c) => ({ ...c, id: c.workflow_id })), [data]);
 
   return (
     <div className="p-6">

@@ -1,6 +1,6 @@
 import type { CreateSecretRequest, Secret, UpdateSecretRequest } from '@/types/secret';
-import type { PaginatedResponse } from './workflows';
 import { api } from './client';
+import type { PaginatedResponse } from './workflows';
 
 export const secretApi = {
   list: (params?: Record<string, string | number | undefined>) =>

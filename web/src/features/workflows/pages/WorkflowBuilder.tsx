@@ -30,14 +30,14 @@ import { useExecutionWS } from '@/hooks/useExecutionWS';
 import type { CanvasNote, StepType, WorkflowEdge, WorkflowStep } from '@/types/workflow';
 import { BuilderToolbar } from '../components/BuilderToolbar';
 import { ConfigPanel } from '../components/ConfigPanel';
-import { NoteConfigPanel } from '../components/NoteConfigPanel';
 import { ExecutionDrawer } from '../components/ExecutionDrawer';
 import { GuidedTour } from '../components/GuidedTour';
 import { LabeledEdge } from '../components/LabeledEdge';
+import { NoteConfigPanel } from '../components/NoteConfigPanel';
 import {
+  SecretKeysContext,
   StepNode,
   type StepNodeData,
-  SecretKeysContext,
   StepNodesContext,
   WorkflowInputSchemaContext,
 } from '../components/StepNode';
@@ -190,8 +190,6 @@ function WorkflowBuilderInner() {
     return () => window.removeEventListener('node-quick-edit', handler);
   }, [setNodes]);
 
-
-
   // Map step type IDs to StepType objects
   const stepTypeMapRef = useRef<Map<string, StepType>>(new Map());
   const initializedRef = useRef(false);
@@ -222,10 +220,7 @@ function WorkflowBuilderInner() {
     queryKey: ['secret-keys'],
     queryFn: () => secretApi.list({ limit: 100 }),
   });
-  const secretKeys = useMemo(
-    () => (secretsData?.data ?? []).map((s) => s.key),
-    [secretsData],
-  );
+  const secretKeys = useMemo(() => (secretsData?.data ?? []).map((s) => s.key), [secretsData]);
 
   // Initialize canvas from workflow data (only once)
   // On load: existing API edges → waitForStepIds, then auto-layout
@@ -470,7 +465,8 @@ function WorkflowBuilderInner() {
 
       const notes = noteNodes.map((n) => {
         const data = n.data as unknown as StickyNoteData;
-        const size = (n as any).width || n.measured?.width || Number.parseFloat(String(n.style?.width)) || 200;
+        const size =
+          (n as any).width || n.measured?.width || Number.parseFloat(String(n.style?.width)) || 200;
         return {
           id: n.id,
           content: data.content,
@@ -514,15 +510,17 @@ function WorkflowBuilderInner() {
   // Config panel handlers
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const isSelectedNote = selectedNode?.type === 'stickyNote';
-  const selectedData = isSelectedNote ? undefined : (selectedNode?.data as StepNodeData | undefined);
-  const selectedNoteData = isSelectedNote ? (selectedNode?.data as unknown as StickyNoteData) : undefined;
+  const selectedData = isSelectedNote
+    ? undefined
+    : (selectedNode?.data as StepNodeData | undefined);
+  const selectedNoteData = isSelectedNote
+    ? (selectedNode?.data as unknown as StickyNoteData)
+    : undefined;
 
   const handleNoteContentChange = useCallback(
     (content: string) => {
       setNodes((nds) =>
-        nds.map((n) =>
-          n.id === selectedNodeId ? { ...n, data: { ...n.data, content } } : n,
-        ),
+        nds.map((n) => (n.id === selectedNodeId ? { ...n, data: { ...n.data, content } } : n)),
       );
       setHasUnsavedChanges(true);
     },
@@ -532,9 +530,7 @@ function WorkflowBuilderInner() {
   const handleNoteColorChange = useCallback(
     (color: string) => {
       setNodes((nds) =>
-        nds.map((n) =>
-          n.id === selectedNodeId ? { ...n, data: { ...n.data, color } } : n,
-        ),
+        nds.map((n) => (n.id === selectedNodeId ? { ...n, data: { ...n.data, color } } : n)),
       );
       setHasUnsavedChanges(true);
     },
@@ -600,93 +596,93 @@ function WorkflowBuilderInner() {
     <StepNodesContext.Provider value={allStepNodes}>
       <WorkflowInputSchemaContext.Provider value={workflow?.input_schema}>
         <SecretKeysContext.Provider value={secretKeys}>
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <GuidedTour />
-          <div className="flex h-full flex-col">
-            <BuilderToolbar
-              workflowName={workflow?.name ?? 'Loading...'}
-              onSave={() => saveMutation.mutate()}
-              onAddNote={handleAddNote}
-              onAutoLayout={handleAutoLayout}
-              onOpenSettings={() => setSettingsOpen(true)}
-              onExecute={handleExecute}
-              isSaving={saveMutation.isPending}
-              isExecuting={isExecuting}
-              hasUnsavedChanges={hasUnsavedChanges}
-              executionStatus={executionStatus}
-            />
-            <div className="flex flex-1 min-h-0 overflow-hidden">
-              <StepPalette />
-              <div ref={reactFlowWrapper} data-tour="canvas" className="flex-1">
-                <ReactFlow
-                  nodes={nodes}
-                  edges={computedEdges}
-                  onNodesChange={handleNodesChange}
-                  onNodeClick={onNodeClick}
-                  onPaneClick={onPaneClick}
-                  nodeTypes={nodeTypes}
-                  edgeTypes={edgeTypes}
-                  defaultEdgeOptions={{ type: 'labeled' }}
-                  nodesDraggable
-                  fitView
-                  proOptions={{ hideAttribution: true }}
-                  deleteKeyCode={['Backspace', 'Delete']}
-                  onNodesDelete={() => setHasUnsavedChanges(true)}
-                >
-                  <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-                </ReactFlow>
+          <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+            <GuidedTour />
+            <div className="flex h-full flex-col">
+              <BuilderToolbar
+                workflowName={workflow?.name ?? 'Loading...'}
+                onSave={() => saveMutation.mutate()}
+                onAddNote={handleAddNote}
+                onAutoLayout={handleAutoLayout}
+                onOpenSettings={() => setSettingsOpen(true)}
+                onExecute={handleExecute}
+                isSaving={saveMutation.isPending}
+                isExecuting={isExecuting}
+                hasUnsavedChanges={hasUnsavedChanges}
+                executionStatus={executionStatus}
+              />
+              <div className="flex flex-1 min-h-0 overflow-hidden">
+                <StepPalette />
+                <div ref={reactFlowWrapper} data-tour="canvas" className="flex-1">
+                  <ReactFlow
+                    nodes={nodes}
+                    edges={computedEdges}
+                    onNodesChange={handleNodesChange}
+                    onNodeClick={onNodeClick}
+                    onPaneClick={onPaneClick}
+                    nodeTypes={nodeTypes}
+                    edgeTypes={edgeTypes}
+                    defaultEdgeOptions={{ type: 'labeled' }}
+                    nodesDraggable
+                    fitView
+                    proOptions={{ hideAttribution: true }}
+                    deleteKeyCode={['Backspace', 'Delete']}
+                    onNodesDelete={() => setHasUnsavedChanges(true)}
+                  >
+                    <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+                  </ReactFlow>
+                </div>
+                {selectedNoteData && selectedNodeId && (
+                  <NoteConfigPanel
+                    content={selectedNoteData.content}
+                    color={selectedNoteData.color}
+                    onContentChange={handleNoteContentChange}
+                    onColorChange={handleNoteColorChange}
+                    onClose={() => setSelectedNodeId(null)}
+                  />
+                )}
+                {selectedData && selectedNodeId && (
+                  <ConfigPanel
+                    stepName={selectedData.label}
+                    stepType={selectedData.stepType}
+                    config={selectedData.config ?? {}}
+                    currentNodeId={selectedNodeId}
+                    allStepNodes={allStepNodes}
+                    waitForStepIds={selectedData.waitForStepIds ?? []}
+                    waitForBranches={selectedData.waitForBranches ?? {}}
+                    stepResult={stepResults.get(selectedNodeId)}
+                    workflowInputSchema={workflow?.input_schema}
+                    onConfigChange={handleConfigChange}
+                    onNameChange={handleNameChange}
+                    onWaitForChange={handleWaitForChange}
+                    onBranchChange={handleBranchChange}
+                    onClose={() => setSelectedNodeId(null)}
+                  />
+                )}
               </div>
-              {selectedNoteData && selectedNodeId && (
-                <NoteConfigPanel
-                  content={selectedNoteData.content}
-                  color={selectedNoteData.color}
-                  onContentChange={handleNoteContentChange}
-                  onColorChange={handleNoteColorChange}
-                  onClose={() => setSelectedNodeId(null)}
-                />
-              )}
-              {selectedData && selectedNodeId && (
-                <ConfigPanel
-                  stepName={selectedData.label}
-                  stepType={selectedData.stepType}
-                  config={selectedData.config ?? {}}
-                  currentNodeId={selectedNodeId}
-                  allStepNodes={allStepNodes}
-                  waitForStepIds={selectedData.waitForStepIds ?? []}
-                  waitForBranches={selectedData.waitForBranches ?? {}}
-                  stepResult={stepResults.get(selectedNodeId)}
-                  workflowInputSchema={workflow?.input_schema}
-                  onConfigChange={handleConfigChange}
-                  onNameChange={handleNameChange}
-                  onWaitForChange={handleWaitForChange}
-                  onBranchChange={handleBranchChange}
-                  onClose={() => setSelectedNodeId(null)}
-                />
-              )}
+              <ExecutionDrawer
+                events={events}
+                stepResults={stepResults}
+                executionStatus={executionStatus}
+                isExecuting={isExecuting}
+                onStepClick={(stepId) => setSelectedNodeId(stepId)}
+                onDismiss={() => {
+                  resetWS();
+                  setCurrentExecutionId(null);
+                  setIsExecuting(false);
+                  setNodes((nds) => nds.map((n) => ({ ...n, className: '' })));
+                }}
+              />
             </div>
-            <ExecutionDrawer
-              events={events}
-              stepResults={stepResults}
-              executionStatus={executionStatus}
-              isExecuting={isExecuting}
-              onStepClick={(stepId) => setSelectedNodeId(stepId)}
-              onDismiss={() => {
-                resetWS();
-                setCurrentExecutionId(null);
-                setIsExecuting(false);
-                setNodes((nds) => nds.map((n) => ({ ...n, className: '' })));
-              }}
-            />
-          </div>
-          <DragOverlay dropAnimation={null}>
-            {draggingStepType ? <DragPreview stepType={draggingStepType} /> : null}
-          </DragOverlay>
-        </DndContext>
-        <WorkflowSettingsSheet
-          workflow={workflow}
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-        />
+            <DragOverlay dropAnimation={null}>
+              {draggingStepType ? <DragPreview stepType={draggingStepType} /> : null}
+            </DragOverlay>
+          </DndContext>
+          <WorkflowSettingsSheet
+            workflow={workflow}
+            open={settingsOpen}
+            onOpenChange={setSettingsOpen}
+          />
         </SecretKeysContext.Provider>
       </WorkflowInputSchemaContext.Provider>
     </StepNodesContext.Provider>

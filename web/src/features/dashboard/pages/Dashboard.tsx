@@ -211,10 +211,18 @@ export default function Dashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Status</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Workflow</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Trigger</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Duration</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                      Status
+                    </th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                      Workflow
+                    </th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                      Trigger
+                    </th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                      Duration
+                    </th>
                     <th className="px-3 py-2 text-right font-medium text-muted-foreground">When</th>
                   </tr>
                 </thead>
@@ -243,7 +251,9 @@ export default function Dashboard() {
                         <td className="px-3 py-2 text-muted-foreground">
                           {exec.status === 'running' ? (
                             <span className="text-blue-500">Running...</span>
-                          ) : duration ?? '—'}
+                          ) : (
+                            (duration ?? '—')
+                          )}
                         </td>
                         <td className="px-3 py-2 text-right text-muted-foreground">
                           {timeAgo(exec.started_at ?? exec.date_created)}

@@ -135,7 +135,8 @@ function WorkflowTile({ workflow }: { workflow: Workflow }) {
               <Database className="h-3 w-3 shrink-0" />
               <span className="opacity-60">DB Event:</span>
               <span>
-                {workflow.trigger_config?.db_table || '—'} ({workflow.trigger_config?.db_event || 'insert'})
+                {workflow.trigger_config?.db_table || '—'} (
+                {workflow.trigger_config?.db_event || 'insert'})
               </span>
             </div>
           )}
@@ -196,7 +197,9 @@ export default function WorkflowList() {
         columns={columns}
         data={workflows}
         isLoading={isLoading}
-        pagination={data ? { total: data.total, limit: data.limit, offset: data.offset } : undefined}
+        pagination={
+          data ? { total: data.total, limit: data.limit, offset: data.offset } : undefined
+        }
         onPageChange={table.onPageChange}
         onRowClick={(wf) => navigate(`/workflows/${wf.id}`)}
         bulkActions={bulkActions}
@@ -232,15 +235,18 @@ export default function WorkflowList() {
         tileRenderer={(wf) => <WorkflowTile workflow={wf} />}
         viewMode={viewMode}
         onViewModeChange={(mode) => {
-          setSearchParams((prev) => {
-            const next = new URLSearchParams(prev);
-            if (mode === 'grid') {
-              next.delete('view');
-            } else {
-              next.set('view', mode);
-            }
-            return next;
-          }, { replace: true });
+          setSearchParams(
+            (prev) => {
+              const next = new URLSearchParams(prev);
+              if (mode === 'grid') {
+                next.delete('view');
+              } else {
+                next.set('view', mode);
+              }
+              return next;
+            },
+            { replace: true },
+          );
         }}
         emptyMessage="No workflows yet"
       />

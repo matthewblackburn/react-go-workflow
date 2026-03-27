@@ -361,7 +361,12 @@ function FilterPill({
       className={`group flex h-7 items-center rounded-md border bg-background text-sm ${isDraft ? 'border-dashed border-muted-foreground/40' : 'border-border'}`}
     >
       {/* Field name */}
-      <Popover open={editingSegment === 'field'} onOpenChange={(open) => { if (!open) onCloseSegment(); }}>
+      <Popover
+        open={editingSegment === 'field'}
+        onOpenChange={(open) => {
+          if (!open) onCloseSegment();
+        }}
+      >
         <PopoverTrigger asChild>
           <button
             type="button"
@@ -383,7 +388,11 @@ function FilterPill({
                 onCloseSegment();
               }}
             >
-              {f.field === config.field ? <Check className="size-3" /> : <span className="size-3" />}
+              {f.field === config.field ? (
+                <Check className="size-3" />
+              ) : (
+                <span className="size-3" />
+              )}
               {f.label}
             </button>
           ))}
@@ -391,7 +400,12 @@ function FilterPill({
       </Popover>
 
       {/* Operator */}
-      <Popover open={editingSegment === 'operator'} onOpenChange={(open) => { if (!open) onCloseSegment(); }}>
+      <Popover
+        open={editingSegment === 'operator'}
+        onOpenChange={(open) => {
+          if (!open) onCloseSegment();
+        }}
+      >
         <PopoverTrigger asChild>
           <button
             type="button"
@@ -418,7 +432,12 @@ function FilterPill({
       </Popover>
 
       {/* Value */}
-      <Popover open={editingSegment === 'value'} onOpenChange={(open) => { if (!open) onCloseSegment(); }}>
+      <Popover
+        open={editingSegment === 'value'}
+        onOpenChange={(open) => {
+          if (!open) onCloseSegment();
+        }}
+      >
         <PopoverTrigger asChild>
           <button
             type="button"
@@ -429,7 +448,13 @@ function FilterPill({
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-56 p-1">
-          <ValueEditor config={config} op={op} value={value ?? ''} onChange={onValueChange} onClose={onCloseSegment} />
+          <ValueEditor
+            config={config}
+            op={op}
+            value={value ?? ''}
+            onChange={onValueChange}
+            onClose={onCloseSegment}
+          />
         </PopoverContent>
       </Popover>
 
@@ -448,20 +473,44 @@ function FilterPill({
 // ── Value editors ──────────────────────────────────────────────────────────
 
 function ValueEditor({
-  config, op, value, onChange, onClose,
+  config,
+  op,
+  value,
+  onChange,
+  onClose,
 }: {
-  config: FilterFieldConfig; op: Operator; value: string; onChange: (value: string) => void; onClose: () => void;
+  config: FilterFieldConfig;
+  op: Operator;
+  value: string;
+  onChange: (value: string) => void;
+  onClose: () => void;
 }) {
   if (config.type === 'bool') return <BoolEditor value={value} onChange={onChange} />;
   if (config.type === 'date') return <DateEditor op={op} value={value} onChange={onChange} />;
   if (config.type === 'exact' && config.options) {
-    if (isMultiValueOp(op)) return <MultiSelectEditor value={value} options={config.options} onChange={onChange} />;
-    return <SingleSelectEditor value={value} options={config.options} onChange={onChange} onClose={onClose} />;
+    if (isMultiValueOp(op))
+      return <MultiSelectEditor value={value} options={config.options} onChange={onChange} />;
+    return (
+      <SingleSelectEditor
+        value={value}
+        options={config.options}
+        onChange={onChange}
+        onClose={onClose}
+      />
+    );
   }
   return <TextEditor value={value} onChange={onChange} onClose={onClose} />;
 }
 
-function TextEditor({ value, onChange, onClose }: { value: string; onChange: (value: string) => void; onClose: () => void }) {
+function TextEditor({
+  value,
+  onChange,
+  onClose,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onClose: () => void;
+}) {
   const ref = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -488,12 +537,32 @@ function TextEditor({ value, onChange, onClose }: { value: string; onChange: (va
   );
 }
 
-function SingleSelectEditor({ value, options, onChange, onClose }: { value: string; options: { value: string; label: string }[]; onChange: (value: string) => void; onClose: () => void }) {
+function SingleSelectEditor({
+  value,
+  options,
+  onChange,
+  onClose,
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  onClose: () => void;
+}) {
   return (
     <div className="flex flex-col">
       {options.map((opt) => (
-        <button key={opt.value} type="button" className={`flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent ${value === opt.value ? 'font-medium' : ''}`} onClick={() => { onChange(opt.value); onClose(); }}>
-          <span className={`flex size-4 items-center justify-center rounded-full border ${value === opt.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border'}`}>
+        <button
+          key={opt.value}
+          type="button"
+          className={`flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent ${value === opt.value ? 'font-medium' : ''}`}
+          onClick={() => {
+            onChange(opt.value);
+            onClose();
+          }}
+        >
+          <span
+            className={`flex size-4 items-center justify-center rounded-full border ${value === opt.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border'}`}
+          >
             {value === opt.value && <Check className="size-3" />}
           </span>
           {opt.label}
@@ -503,7 +572,15 @@ function SingleSelectEditor({ value, options, onChange, onClose }: { value: stri
   );
 }
 
-function MultiSelectEditor({ value, options, onChange }: { value: string; options: { value: string; label: string }[]; onChange: (value: string) => void }) {
+function MultiSelectEditor({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) {
   const selected = new Set(value.split(',').filter(Boolean));
   const toggle = (v: string) => {
     const next = new Set(selected);
@@ -515,8 +592,15 @@ function MultiSelectEditor({ value, options, onChange }: { value: string; option
   return (
     <div className="flex flex-col">
       {options.map((opt) => (
-        <button key={opt.value} type="button" className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent" onClick={() => toggle(opt.value)}>
-          <span className={`flex size-4 items-center justify-center rounded-sm border ${selected.has(opt.value) ? 'border-primary bg-primary text-primary-foreground' : 'border-border'}`}>
+        <button
+          key={opt.value}
+          type="button"
+          className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+          onClick={() => toggle(opt.value)}
+        >
+          <span
+            className={`flex size-4 items-center justify-center rounded-sm border ${selected.has(opt.value) ? 'border-primary bg-primary text-primary-foreground' : 'border-border'}`}
+          >
             {selected.has(opt.value) && <Check className="size-3" />}
           </span>
           {opt.label}
@@ -534,8 +618,15 @@ function BoolEditor({ value, onChange }: { value: string; onChange: (value: stri
   return (
     <div className="flex flex-col">
       {options.map((opt) => (
-        <button key={opt.value} type="button" className={`flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent ${value === opt.value ? 'font-medium' : ''}`} onClick={() => onChange(opt.value)}>
-          <span className={`flex size-4 items-center justify-center rounded-full border ${value === opt.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border'}`}>
+        <button
+          key={opt.value}
+          type="button"
+          className={`flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent ${value === opt.value ? 'font-medium' : ''}`}
+          onClick={() => onChange(opt.value)}
+        >
+          <span
+            className={`flex size-4 items-center justify-center rounded-full border ${value === opt.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border'}`}
+          >
             {value === opt.value && <Check className="size-3" />}
           </span>
           {opt.label}
@@ -545,7 +636,15 @@ function BoolEditor({ value, onChange }: { value: string; onChange: (value: stri
   );
 }
 
-function DateEditor({ op, value, onChange }: { op: Operator; value: string; onChange: (value: string) => void }) {
+function DateEditor({
+  op,
+  value,
+  onChange,
+}: {
+  op: Operator;
+  value: string;
+  onChange: (value: string) => void;
+}) {
   const isBetween = op === 'between';
   const parts = value.split(',');
   const val1 = parts[0] ?? '';
@@ -555,8 +654,11 @@ function DateEditor({ op, value, onChange }: { op: Operator; value: string; onCh
     return (
       <div className="flex flex-col gap-2">
         <div>
-          <label className="text-xs text-muted-foreground mb-1 block">From</label>
+          <label htmlFor="filter-date-from" className="text-xs text-muted-foreground mb-1 block">
+            From
+          </label>
           <Input
+            id="filter-date-from"
             type="date"
             className="h-8 text-sm"
             defaultValue={val1}
@@ -564,8 +666,11 @@ function DateEditor({ op, value, onChange }: { op: Operator; value: string; onCh
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground mb-1 block">To</label>
+          <label htmlFor="filter-date-to" className="text-xs text-muted-foreground mb-1 block">
+            To
+          </label>
           <Input
+            id="filter-date-to"
             type="date"
             className="h-8 text-sm"
             defaultValue={val2}
@@ -588,7 +693,11 @@ function DateEditor({ op, value, onChange }: { op: Operator; value: string; onCh
 
 function formatDateDisplay(value: string): string {
   try {
-    return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    return new Date(value).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   } catch {
     return value;
   }
@@ -611,7 +720,8 @@ function getDisplayValue(config: FilterFieldConfig, op: Operator, value: string 
     if (isMultiValueOp(op)) {
       const values = value.split(',').filter(Boolean);
       if (values.length === 0) return '...';
-      if (values.length === 1) return config.options.find((o) => o.value === values[0])?.label ?? values[0];
+      if (values.length === 1)
+        return config.options.find((o) => o.value === values[0])?.label ?? values[0];
       return `${values.length} selected`;
     }
     return config.options.find((o) => o.value === value)?.label ?? value;
