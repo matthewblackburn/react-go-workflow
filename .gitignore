@@ -1,0 +1,32 @@
+# Go
+tmp/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+node_modules
+
+# Frontend
+web/node_modules/
+web/dist/
+web/.vite/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docker
+docker-compose.override.yml

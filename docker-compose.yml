@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: workflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      DATABASE_URL: "postgres://postgres:postgres@db:5432/workflow?sslmode=disable"
+      JWT_SECRET: "dev-secret-change-me"
+    volumes:
+      - .:/app
+      - go-mod-cache:/go/pkg/mod
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:5173"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+      - pnpm-store:/root/.local/share/pnpm/store
+    depends_on:
+      - api
+
+  pgweb:
+    image: sosedoff/pgweb:latest
+    ports:
+      - "8081:8081"
+    environment:
+      PGWEB_DATABASE_URL: "postgres://postgres:postgres@db:5432/workflow?sslmode=disable"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
+  go-mod-cache:
+  pnpm-store:
