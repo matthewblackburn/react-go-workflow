@@ -17,6 +17,7 @@ import (
 // Handler handles AI workflow generation requests.
 type Handler struct {
 	client    *Client
+	entClient *ent.Client
 	apiKey    string
 	stepTypes []*ent.StepType
 	// stepTypesByName maps step type name (e.g. "http_request") to the ent entity.
@@ -26,6 +27,7 @@ type Handler struct {
 // NewHandler creates a new AI handler, loading and caching step types at init time.
 func NewHandler(entClient *ent.Client, apiKey string) *Handler {
 	h := &Handler{
+		entClient:       entClient,
 		apiKey:          apiKey,
 		stepTypesByName: make(map[string]*ent.StepType),
 	}
@@ -139,8 +141,16 @@ func (h *Handler) GenerateWorkflow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Load available secret keys (not values) for the prompt
+	var secretKeys []string
+	if secrets, err := h.entClient.Secret.Query().All(r.Context()); err == nil {
+		for _, s := range secrets {
+			secretKeys = append(secretKeys, s.Key)
+		}
+	}
+
 	// Build system prompt and tool schema
-	systemPrompt := BuildSystemPrompt(h.stepTypes)
+	systemPrompt := BuildSystemPrompt(h.stepTypes, secretKeys)
 	tool := BuildToolSchema()
 
 	// Call Claude API

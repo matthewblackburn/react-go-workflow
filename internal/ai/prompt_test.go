@@ -42,7 +42,7 @@ func TestBuildSystemPrompt_IncludesAllStepTypes(t *testing.T) {
 		},
 	}
 
-	prompt := BuildSystemPrompt(stepTypes)
+	prompt := BuildSystemPrompt(stepTypes, []string{"API_KEY", "DB_URL"})
 
 	// Should include step type names and descriptions
 	if !strings.Contains(prompt, "http_request") {

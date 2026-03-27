@@ -9,7 +9,7 @@ import (
 )
 
 // BuildSystemPrompt creates the system prompt with a catalog of available step types.
-func BuildSystemPrompt(stepTypes []*ent.StepType) string {
+func BuildSystemPrompt(stepTypes []*ent.StepType, secretKeys []string) string {
 	var b strings.Builder
 
 	b.WriteString(`You are a workflow builder assistant. You create automated workflows from natural language descriptions.
@@ -58,6 +58,17 @@ You have access to the following step types. Use ONLY these types — do not inv
 		}
 
 		b.WriteString("\n")
+	}
+
+	if len(secretKeys) > 0 {
+		b.WriteString("## Available Secrets\n\n")
+		b.WriteString("The following secrets are configured and can be referenced with {{secrets.<key>}}:\n")
+		for _, key := range secretKeys {
+			fmt.Fprintf(&b, "- %s\n", key)
+		}
+		b.WriteString("\nOnly use secrets from this list. Do NOT reference secrets that don't exist.\n\n")
+	} else {
+		b.WriteString("## Secrets\n\nNo secrets are currently configured. Do NOT use {{secrets.<key>}} references. If authentication is needed, use placeholder values and instruct the user to configure them.\n\n")
 	}
 
 	b.WriteString(`## Expression Syntax
