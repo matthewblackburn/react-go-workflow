@@ -164,8 +164,8 @@ export default function ExecutionView() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold">Execution not found</h2>
-          <Link to="/executions" className="mt-2 text-sm text-primary hover:underline">
+          <h2 className="font-semibold text-xl">Execution not found</h2>
+          <Link to="/executions" className="mt-2 text-primary text-sm hover:underline">
             Back to executions
           </Link>
         </div>
@@ -177,11 +177,11 @@ export default function ExecutionView() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold">Workflow was deleted</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h2 className="font-semibold text-xl">Workflow was deleted</h2>
+          <p className="mt-1 text-muted-foreground text-sm">
             The workflow for this execution no longer exists.
           </p>
-          <Link to="/executions" className="mt-2 text-sm text-primary hover:underline">
+          <Link to="/executions" className="mt-2 text-primary text-sm hover:underline">
             Back to executions
           </Link>
         </div>
@@ -201,7 +201,7 @@ export default function ExecutionView() {
         </Link>
 
         <div className="flex items-center gap-3">
-          <h1 className="text-sm font-semibold">
+          <h1 className="font-semibold text-sm">
             Execution{' '}
             <span className="font-mono text-muted-foreground">#{execution.id.slice(0, 8)}</span>
           </h1>
@@ -213,7 +213,7 @@ export default function ExecutionView() {
           </Badge>
         </div>
 
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-4 text-muted-foreground text-xs">
           <span>
             Workflow: <span className="font-medium text-foreground">{workflow.name}</span>
           </span>
@@ -236,7 +236,7 @@ export default function ExecutionView() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-6 text-xs text-destructive hover:text-destructive"
+                className="h-6 text-destructive text-xs hover:text-destructive"
                 onClick={() => cancelMutation.mutate()}
                 disabled={cancelMutation.isPending}
               >
@@ -266,7 +266,7 @@ export default function ExecutionView() {
 
       {/* Error banner */}
       {execution.error && (
-        <div className="border-b border-red-200 bg-red-50 px-4 py-2 text-xs text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+        <div className="border-red-200 border-b bg-red-50 px-4 py-2 text-red-800 text-xs dark:border-red-800 dark:bg-red-950 dark:text-red-200">
           <span className="font-medium">Error:</span> {execution.error}
         </div>
       )}

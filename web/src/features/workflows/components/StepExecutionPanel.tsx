@@ -90,9 +90,9 @@ export function StepExecutionPanel({
       {/* Header */}
       <div className="flex items-center justify-between border-b px-4 py-3">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold">{step.name}</h3>
+          <h3 className="truncate font-semibold text-sm">{step.name}</h3>
           {step.edges?.step_type && (
-            <p className="text-xs text-muted-foreground">{step.edges.step_type.display_name}</p>
+            <p className="text-muted-foreground text-xs">{step.edges.step_type.display_name}</p>
           )}
         </div>
         <button
@@ -135,8 +135,8 @@ export function StepExecutionPanel({
 
           {/* Error */}
           {error && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
-              <p className="font-medium mb-1">Error</p>
+            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-red-800 text-xs dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+              <p className="mb-1 font-medium">Error</p>
               <p className="whitespace-pre-wrap">{error}</p>
             </div>
           )}
@@ -145,16 +145,16 @@ export function StepExecutionPanel({
           {input && Object.keys(input).length > 0 && (
             <div>
               <div className="mb-1.5 flex items-center justify-between">
-                <p className="text-xs font-medium text-muted-foreground">Input</p>
+                <p className="font-medium text-muted-foreground text-xs">Input</p>
                 <button
                   type="button"
-                  className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                   onClick={() => setModalData({ title: `${step.name} — Input`, data: input })}
                 >
                   <ExternalLink className="h-3 w-3" />
                 </button>
               </div>
-              <div className="rounded-md border overflow-hidden">
+              <div className="overflow-hidden rounded-md border">
                 <JsonViewer data={input} maxHeight="200px" />
               </div>
             </div>
@@ -164,16 +164,16 @@ export function StepExecutionPanel({
           {output && Object.keys(output).length > 0 && (
             <div>
               <div className="mb-1.5 flex items-center justify-between">
-                <p className="text-xs font-medium text-muted-foreground">Output</p>
+                <p className="font-medium text-muted-foreground text-xs">Output</p>
                 <button
                   type="button"
-                  className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                   onClick={() => setModalData({ title: `${step.name} — Output`, data: output })}
                 >
                   <ExternalLink className="h-3 w-3" />
                 </button>
               </div>
-              <div className="rounded-md border overflow-hidden">
+              <div className="overflow-hidden rounded-md border">
                 <JsonViewer data={output} maxHeight="300px" />
               </div>
             </div>
@@ -187,11 +187,11 @@ export function StepExecutionPanel({
           if (!open) setModalData(null);
         }}
       >
-        <DialogContent className="w-[90vw] sm:max-w-4xl max-h-[80vh] flex flex-col">
+        <DialogContent className="flex max-h-[80vh] w-[90vw] flex-col sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle className="text-sm">{modalData?.title}</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-hidden">
             {modalData && <JsonViewer data={modalData.data} maxHeight="60vh" />}
           </div>
         </DialogContent>

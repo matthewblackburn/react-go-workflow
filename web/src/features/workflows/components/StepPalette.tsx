@@ -95,12 +95,12 @@ export function StepPalette() {
   return (
     <div
       data-tour="step-palette"
-      className="flex h-full w-64 min-h-0 flex-col border-r bg-background"
+      className="flex h-full min-h-0 w-64 flex-col border-r bg-background"
     >
       <div className="border-b p-3">
-        <h3 className="mb-2 text-sm font-semibold">Steps</h3>
+        <h3 className="mb-2 font-semibold text-sm">Steps</h3>
         <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search steps..."
             className="pl-9"
@@ -109,11 +109,11 @@ export function StepPalette() {
           />
         </div>
       </div>
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea className="min-h-0 flex-1">
         <div className="p-3">
           {grouped.map((group) => (
             <div key={group.category} className="mb-4">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wider">
                 {group.label}
               </p>
               <div className="grid gap-1.5">
@@ -128,7 +128,7 @@ export function StepPalette() {
             </div>
           ))}
           {grouped.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
+            <p className="py-8 text-center text-muted-foreground text-sm">
               No steps match your search
             </p>
           )}

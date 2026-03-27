@@ -296,7 +296,7 @@ export function FilterBar({ fields, filters, onFilterChange }: FilterBarProps) {
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex size-7 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
+              className="flex size-7 items-center justify-center rounded-md border border-border border-dashed text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
             >
               <Plus className="size-3.5" />
             </button>
@@ -358,7 +358,7 @@ function FilterPill({
 
   return (
     <div
-      className={`group flex h-7 items-center rounded-md border bg-background text-sm ${isDraft ? 'border-dashed border-muted-foreground/40' : 'border-border'}`}
+      className={`group flex h-7 items-center rounded-md border bg-background text-sm ${isDraft ? 'border-muted-foreground/40 border-dashed' : 'border-border'}`}
     >
       {/* Field name */}
       <Popover
@@ -370,7 +370,7 @@ function FilterPill({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-1 rounded-l-md border-r border-border px-2 py-1 font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex items-center gap-1 rounded-l-md border-border border-r px-2 py-1 font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             onClick={() => onEditSegment('field')}
           >
             {config.label}
@@ -409,7 +409,7 @@ function FilterPill({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-1 border-r border-border px-2 py-1 text-muted-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
+            className="flex items-center gap-1 border-border border-r px-2 py-1 text-muted-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
             onClick={() => onEditSegment('operator')}
           >
             {operatorLabel}
@@ -461,7 +461,7 @@ function FilterPill({
       {/* Remove */}
       <button
         type="button"
-        className="flex items-center self-stretch rounded-r-md border-l border-border px-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="flex items-center self-stretch rounded-r-md border-border border-l px-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         onClick={onRemove}
       >
         <X className="size-3" />
@@ -654,7 +654,7 @@ function DateEditor({
     return (
       <div className="flex flex-col gap-2">
         <div>
-          <label htmlFor="filter-date-from" className="text-xs text-muted-foreground mb-1 block">
+          <label htmlFor="filter-date-from" className="mb-1 block text-muted-foreground text-xs">
             From
           </label>
           <Input
@@ -666,7 +666,7 @@ function DateEditor({
           />
         </div>
         <div>
-          <label htmlFor="filter-date-to" className="text-xs text-muted-foreground mb-1 block">
+          <label htmlFor="filter-date-to" className="mb-1 block text-muted-foreground text-xs">
             To
           </label>
           <Input

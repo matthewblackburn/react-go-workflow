@@ -78,7 +78,7 @@ function NotificationBell() {
       >
         <Bell className="h-4 w-4" />
         {count > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 font-bold text-[10px] text-white">
             {count > 99 ? '99+' : count}
           </span>
         )}
@@ -89,14 +89,14 @@ function NotificationBell() {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div
             ref={panelRef}
-            className="absolute right-0 top-full z-50 mt-1 w-80 rounded-lg border bg-popover shadow-lg"
+            className="absolute top-full right-0 z-50 mt-1 w-80 rounded-lg border bg-popover shadow-lg"
           >
             <div className="flex items-center justify-between border-b px-3 py-2">
-              <span className="text-sm font-medium">Notifications</span>
+              <span className="font-medium text-sm">Notifications</span>
               {count > 0 && (
                 <button
                   type="button"
-                  className="text-xs text-primary hover:underline"
+                  className="text-primary text-xs hover:underline"
                   onClick={() => markAllReadMutation.mutate()}
                 >
                   Mark all read
@@ -105,7 +105,7 @@ function NotificationBell() {
             </div>
             <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
-                <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                <div className="px-3 py-6 text-center text-muted-foreground text-sm">
                   No unread notifications
                 </div>
               ) : (
@@ -113,7 +113,7 @@ function NotificationBell() {
                   <button
                     key={n.id}
                     type="button"
-                    className="flex w-full items-start gap-2 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
+                    className="flex w-full items-start gap-2 px-3 py-2.5 text-left transition-colors hover:bg-muted/50"
                     onClick={() => handleClick(n)}
                   >
                     <span
@@ -122,11 +122,11 @@ function NotificationBell() {
                       •
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{n.title}</p>
+                      <p className="truncate font-medium text-sm">{n.title}</p>
                       {n.message && (
-                        <p className="text-xs text-muted-foreground truncate">{n.message}</p>
+                        <p className="truncate text-muted-foreground text-xs">{n.message}</p>
                       )}
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">
                         {new Date(n.date_created).toLocaleString(undefined, {
                           month: 'short',
                           day: 'numeric',

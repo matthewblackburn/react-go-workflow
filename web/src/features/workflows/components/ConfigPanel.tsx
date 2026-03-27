@@ -61,14 +61,14 @@ function ResultsTab({ result }: { result: StepResult }) {
         {result.status === 'completed' && <CircleCheck className="h-4 w-4 text-green-500" />}
         {result.status === 'failed' && <CircleX className="h-4 w-4 text-red-500" />}
         {result.status === 'running' && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
-        <span className="text-sm font-medium capitalize">{result.status}</span>
-        {duration && <span className="text-xs text-muted-foreground">{duration}</span>}
+        <span className="font-medium text-sm capitalize">{result.status}</span>
+        {duration && <span className="text-muted-foreground text-xs">{duration}</span>}
       </div>
 
       {result.error && (
         <div className="space-y-1">
-          <Label className="text-xs text-red-500">Error</Label>
-          <pre className="rounded-md bg-red-50 dark:bg-red-950 p-3 text-xs text-red-700 dark:text-red-300 overflow-auto max-h-[120px] whitespace-pre-wrap">
+          <Label className="text-red-500 text-xs">Error</Label>
+          <pre className="max-h-120px overflow-auto whitespace-pre-wrap rounded-md bg-red-50 p-3 text-red-700 text-xs dark:bg-red-950 dark:text-red-300">
             {result.error}
           </pre>
         </div>
@@ -82,7 +82,7 @@ function ResultsTab({ result }: { result: StepResult }) {
       )}
 
       {!result.output && !result.error && result.status === 'completed' && (
-        <p className="text-xs text-muted-foreground">No output data</p>
+        <p className="text-muted-foreground text-xs">No output data</p>
       )}
     </div>
   );
@@ -107,21 +107,21 @@ export function ConfigPanel({
   const hasResult = !!stepResult;
 
   return (
-    <div className="flex h-full w-80 min-h-0 flex-col border-l bg-background">
+    <div className="flex h-full min-h-0 w-80 flex-col border-l bg-background">
       <div className="flex items-center justify-between border-b px-4 py-3">
-        <h3 className="text-sm font-semibold">{stepName}</h3>
+        <h3 className="font-semibold text-sm">{stepName}</h3>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
       </div>
 
       {hasResult ? (
-        <Tabs defaultValue="configure" className="flex flex-1 flex-col min-h-0">
+        <Tabs defaultValue="configure" className="flex min-h-0 flex-1 flex-col">
           <TabsList className="w-full rounded-none border-b bg-transparent px-2">
             <TabsTrigger value="configure" className="flex-1 text-xs">
               Configure
             </TabsTrigger>
-            <TabsTrigger value="results" className="flex-1 text-xs gap-1.5">
+            <TabsTrigger value="results" className="flex-1 gap-1.5 text-xs">
               Results
               {stepResult?.status === 'completed' && (
                 <CircleCheck className="h-3 w-3 text-green-500" />
@@ -132,12 +132,12 @@ export function ConfigPanel({
               )}
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="results" className="flex-1 min-h-0 mt-0">
+          <TabsContent value="results" className="mt-0 min-h-0 flex-1">
             <ScrollArea className="h-full">
               <ResultsTab result={stepResult!} />
             </ScrollArea>
           </TabsContent>
-          <TabsContent value="configure" className="flex-1 min-h-0 mt-0">
+          <TabsContent value="configure" className="mt-0 min-h-0 flex-1">
             <ScrollArea className="h-full">
               <ConfigureContent
                 stepName={stepName}
@@ -157,7 +157,7 @@ export function ConfigPanel({
           </TabsContent>
         </Tabs>
       ) : (
-        <ScrollArea className="flex-1 min-h-0">
+        <ScrollArea className="min-h-0 flex-1">
           <ConfigureContent
             stepName={stepName}
             stepType={stepType}
@@ -212,13 +212,13 @@ function KeyValueEditor({
             value={k}
             onChange={(e) => updateEntry(i, e.target.value, v)}
             placeholder="Key"
-            className="h-7 text-xs flex-1"
+            className="h-7 flex-1 text-xs"
           />
           <Input
             value={v}
             onChange={(e) => updateEntry(i, k, e.target.value)}
             placeholder="Value"
-            className="h-7 text-xs flex-1"
+            className="h-7 flex-1 text-xs"
           />
           <button
             type="button"
@@ -232,7 +232,7 @@ function KeyValueEditor({
       <button
         type="button"
         onClick={addEntry}
-        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
       >
         <Plus className="h-3 w-3" />
         Add
@@ -267,7 +267,7 @@ function StringArrayEditor({
               onChange(next);
             }}
             placeholder={placeholder ?? `Item ${i + 1}`}
-            className="h-7 text-xs flex-1"
+            className="h-7 flex-1 text-xs"
           />
           <button
             type="button"
@@ -281,7 +281,7 @@ function StringArrayEditor({
       <button
         type="button"
         onClick={() => onChange([...items, ''])}
-        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
       >
         <Plus className="h-3 w-3" />
         Add
@@ -362,7 +362,7 @@ function ConfigureContent({
         />
       </div>
 
-      {stepType && <p className="text-xs text-muted-foreground">{stepType.description}</p>}
+      {stepType && <p className="text-muted-foreground text-xs">{stepType.description}</p>}
 
       <Separator />
 
@@ -384,7 +384,7 @@ function ConfigureContent({
       {Object.keys(properties).length > 0 && (
         <>
           <Separator />
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
             Configuration
           </p>
         </>
@@ -454,7 +454,7 @@ function ConfigureContent({
                   checked={!!currentValue}
                   onCheckedChange={(v) => updateField(key, !!v)}
                 />
-                <label htmlFor={`field-${key}`} className="text-xs text-muted-foreground">
+                <label htmlFor={`field-${key}`} className="text-muted-foreground text-xs">
                   {currentValue ? 'Enabled' : 'Disabled'}
                 </label>
               </div>

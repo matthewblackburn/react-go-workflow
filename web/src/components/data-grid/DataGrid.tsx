@@ -404,7 +404,7 @@ export function DataGrid<T extends { id: string | number }>({
 
     return (
       <div
-        className={`flex w-full items-center justify-between gap-1${isSortable ? ' cursor-pointer select-none hover:text-foreground' : ''}`}
+        className={`flex w-full items-center justify-between gap-1${isSortable ? 'cursor-pointer select-none hover:text-foreground' : ''}`}
         role={isSortable ? 'button' : undefined}
         tabIndex={isSortable ? 0 : undefined}
         onClick={handleSort}
@@ -449,7 +449,7 @@ export function DataGrid<T extends { id: string | number }>({
       {(title || (hasSelection && bulkActions) || tileRenderer) && (
         <div className="flex h-14 shrink-0 items-center justify-between px-6">
           <div className="flex items-center gap-3">
-            {title && <h2 className="text-2xl font-bold">{title}</h2>}
+            {title && <h2 className="font-bold text-2xl">{title}</h2>}
             {tileRenderer && onViewModeChange && (
               <div className="flex items-center rounded-md border">
                 <button
@@ -471,7 +471,7 @@ export function DataGrid<T extends { id: string | number }>({
           </div>
           {hasSelection && bulkActions && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">{selectedIds.length} selected</span>
+              <span className="text-muted-foreground text-sm">{selectedIds.length} selected</span>
               {bulkActions.map((action) => (
                 <Button
                   key={action.label}
@@ -534,7 +534,7 @@ export function DataGrid<T extends { id: string | number }>({
         </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-auto px-6">
-          <div className="overflow-auto rounded-md border h-full">
+          <div className="h-full overflow-auto rounded-md border">
             <Table
               style={
                 enableResizing
@@ -565,7 +565,7 @@ export function DataGrid<T extends { id: string | number }>({
                           <div
                             onMouseDown={header.getResizeHandler()}
                             onTouchStart={header.getResizeHandler()}
-                            className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none ${
+                            className={`absolute top-0 right-0 h-full w-1 cursor-col-resize touch-none select-none ${
                               header.column.getIsResizing() ? 'bg-primary' : 'hover:bg-border'
                             }`}
                           />
@@ -600,7 +600,7 @@ export function DataGrid<T extends { id: string | number }>({
                       {row.getVisibleCells().map((cell, idx) => (
                         <TableCell
                           key={cell.id}
-                          className={`${cellClassName(idx, false)}${cell.column.getCanResize() ? ' overflow-hidden truncate' : ''}`}
+                          className={`${cellClassName(idx, false)}${cell.column.getCanResize() ? 'overflow-hidden truncate' : ''}`}
                           style={enableResizing ? { width: cell.column.getSize() } : undefined}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -627,7 +627,7 @@ export function DataGrid<T extends { id: string | number }>({
       {/* Pagination */}
       {pagination && (
         <div className="flex shrink-0 items-center justify-between px-6 py-3">
-          <span className="text-sm text-muted-foreground">Page {currentPage}</span>
+          <span className="text-muted-foreground text-sm">Page {currentPage}</span>
           <div className="flex items-center gap-2">
             <Button
               size="sm"

@@ -27,9 +27,9 @@ export function NoteConfigPanel({
   onClose,
 }: NoteConfigPanelProps) {
   return (
-    <div className="flex h-full w-80 min-h-0 flex-col border-l bg-background">
+    <div className="flex h-full min-h-0 w-80 flex-col border-l bg-background">
       <div className="flex items-center justify-between border-b px-4 py-3">
-        <h3 className="text-sm font-semibold">Sticky Note</h3>
+        <h3 className="font-semibold text-sm">Sticky Note</h3>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
@@ -55,7 +55,7 @@ export function NoteConfigPanel({
                 onClick={() => onColorChange(c.name)}
                 className={`h-8 w-8 rounded border-2 transition-transform ${
                   color === c.name
-                    ? 'border-foreground scale-110'
+                    ? 'scale-110 border-foreground'
                     : 'border-transparent hover:scale-105'
                 }`}
                 style={{ backgroundColor: colorBgs[c.name] }}

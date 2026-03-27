@@ -53,8 +53,8 @@ export default function SecretEdit() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold">Secret not found</h2>
-          <Link to="/secrets" className="mt-2 text-sm text-primary hover:underline">
+          <h2 className="font-semibold text-xl">Secret not found</h2>
+          <Link to="/secrets" className="mt-2 text-primary text-sm hover:underline">
             Back to secrets
           </Link>
         </div>
@@ -66,21 +66,21 @@ export default function SecretEdit() {
     <div className="mx-auto max-w-2xl p-6">
       <Link
         to={`/secrets/${id}`}
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6"
+        className="mb-6 inline-flex items-center gap-1 text-muted-foreground text-sm hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to secret
       </Link>
 
-      <h1 className="text-2xl font-bold mb-6">
+      <h1 className="mb-6 font-bold text-2xl">
         Edit Secret <span className="font-mono text-muted-foreground">{secret.key}</span>
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="rounded-lg border p-4 space-y-4">
+        <div className="space-y-4 rounded-lg border p-4">
           <div className="space-y-2">
             <Label htmlFor="key">Key</Label>
-            <Input id="key" value={secret.key} disabled className="font-mono bg-muted" />
+            <Input id="key" value={secret.key} disabled className="bg-muted font-mono" />
           </div>
 
           <div className="space-y-2">
@@ -92,7 +92,7 @@ export default function SecretEdit() {
               placeholder="Leave empty to keep current value"
               autoComplete="off"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Secret values are encrypted and cannot be viewed. Enter a new value to replace the
               existing one.
             </p>

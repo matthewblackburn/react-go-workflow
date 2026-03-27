@@ -40,15 +40,15 @@ export default function Login() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Workflow className="h-6 w-6 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold">Workflow Builder</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to get started</p>
+          <h1 className="font-bold text-2xl">Workflow Builder</h1>
+          <p className="mt-1 text-muted-foreground text-sm">Sign in to get started</p>
         </div>
 
         <Button onClick={handleDevLogin} disabled={loading} className="w-full" size="lg">
           {loading ? 'Generating...' : 'Quick Dev Login'}
         </Button>
 
-        {error && <p className="text-center text-sm text-destructive">{error}</p>}
+        {error && <p className="text-center text-destructive text-sm">{error}</p>}
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">

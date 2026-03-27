@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { JsonBuilder, RULES_SCHEMA } from '../JsonBuilder';
+import { JsonBuilder } from '../JsonBuilder';
 
 describe('JsonBuilder', () => {
   it('renders empty state with Add button visible', () => {

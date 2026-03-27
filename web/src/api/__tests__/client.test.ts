@@ -62,10 +62,7 @@ describe('api client', () => {
 
   it('throws ApiError for non-2xx responses with error body', async () => {
     mockFetch.mockReturnValue(
-      jsonResponse(
-        { code: 'NOT_FOUND', message: 'not found', details: { id: 'invalid' } },
-        404,
-      ),
+      jsonResponse({ code: 'NOT_FOUND', message: 'not found', details: { id: 'invalid' } }, 404),
     );
 
     await expect(api.get('/api/missing')).rejects.toThrow(ApiError);

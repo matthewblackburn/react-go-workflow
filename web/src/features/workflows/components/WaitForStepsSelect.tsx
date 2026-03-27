@@ -68,7 +68,7 @@ export function WaitForStepsSelect({
   }
 
   if (availableSteps.length === 0) {
-    return <p className="text-xs text-muted-foreground">No other steps available</p>;
+    return <p className="text-muted-foreground text-xs">No other steps available</p>;
   }
 
   return (
@@ -78,9 +78,9 @@ export function WaitForStepsSelect({
           <Button
             variant="outline"
             size="sm"
-            className="w-full justify-between h-auto min-h-9 px-3 py-2"
+            className="h-auto min-h-9 w-full justify-between px-3 py-2"
           >
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {selectedSteps.length === 0 ? 'No dependencies' : `${selectedSteps.length} selected`}
             </span>
             <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
@@ -107,13 +107,13 @@ export function WaitForStepsSelect({
             const branchLabel = branch === 'true' ? 'Yes' : branch === 'false' ? 'No' : null;
 
             return (
-              <Badge key={step.id} variant="secondary" className="gap-1 text-[10px] pr-1">
+              <Badge key={step.id} variant="secondary" className="gap-1 pr-1 text-[10px]">
                 {step.label}
                 {step.isCondition && branchLabel && (
                   <button
                     type="button"
                     onClick={() => toggleBranch(step.id)}
-                    className={`ml-0.5 rounded px-1 py-0 text-[9px] font-bold ${
+                    className={`ml-0.5 rounded px-1 py-0 font-bold text-[9px] ${
                       branch === 'true'
                         ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
                         : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'

@@ -65,7 +65,7 @@ export function ExecutionDrawer({
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between px-4 py-2 text-xs font-medium hover:bg-muted/50"
+        className="flex w-full items-center justify-between px-4 py-2 font-medium text-xs hover:bg-muted/50"
       >
         <div className="flex items-center gap-2">
           {isExecuting ? (
@@ -106,9 +106,9 @@ export function ExecutionDrawer({
 
       {expanded && (
         <ScrollArea className="max-h-[200px]">
-          <div className="px-4 pb-3 space-y-1">
+          <div className="space-y-1 px-4 pb-3">
             {stepEvents.length === 0 && (
-              <p className="text-xs text-muted-foreground py-2">Waiting for steps...</p>
+              <p className="py-2 text-muted-foreground text-xs">Waiting for steps...</p>
             )}
             {stepEvents.map((event) => {
               const result = event.step_id ? stepResults.get(event.step_id) : undefined;
@@ -119,7 +119,7 @@ export function ExecutionDrawer({
                   key={`${event.step_id}-${event.status}-${event.timestamp}`}
                   type="button"
                   onClick={() => event.step_id && onStepClick(event.step_id)}
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted/50 transition-colors"
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted/50"
                 >
                   {statusIcons[event.status ?? 'pending'] ?? statusIcons.pending}
                   <span className="flex-1 truncate font-medium">
@@ -132,7 +132,7 @@ export function ExecutionDrawer({
                     <span className="text-[10px] text-muted-foreground">{duration}</span>
                   )}
                   {result?.error && (
-                    <span className="text-[10px] text-red-500 truncate max-w-[120px]">
+                    <span className="max-w-[120px] truncate text-[10px] text-red-500">
                       {result.error}
                     </span>
                   )}

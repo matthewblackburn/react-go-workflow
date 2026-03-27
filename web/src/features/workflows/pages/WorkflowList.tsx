@@ -44,7 +44,7 @@ const columns: ColumnDef<Workflow, unknown>[] = [
     accessorKey: 'description',
     header: 'Description',
     cell: ({ row }) => (
-      <span className="text-muted-foreground truncate max-w-xs block">
+      <span className="block max-w-xs truncate text-muted-foreground">
         {row.original.description || '—'}
       </span>
     ),
@@ -87,7 +87,7 @@ function WorkflowTile({ workflow }: { workflow: Workflow }) {
       <div className="mb-3">
         <h3 className="truncate font-semibold">{workflow.name}</h3>
         {workflow.description && (
-          <p className="mt-1 truncate text-sm text-muted-foreground">{workflow.description}</p>
+          <p className="mt-1 truncate text-muted-foreground text-sm">{workflow.description}</p>
         )}
       </div>
       <div className="space-y-1.5">
@@ -114,10 +114,10 @@ function WorkflowTile({ workflow }: { workflow: Workflow }) {
             <div className="flex items-center gap-1.5 truncate">
               <Globe className="h-3 w-3 shrink-0" />
               <span className="opacity-60">Webhook:</span>
-              <span className="font-mono text-[10px] truncate">{`/webhooks/${workflow.webhook_slug}`}</span>
+              <span className="truncate font-mono text-[10px]">{`/webhooks/${workflow.webhook_slug}`}</span>
               <button
                 type="button"
-                className="shrink-0 p-0.5 rounded text-muted-foreground hover:text-foreground transition-colors"
+                className="shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigator.clipboard.writeText(

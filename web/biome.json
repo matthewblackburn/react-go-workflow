@@ -37,6 +37,9 @@
         "noStaticElementInteractions": "off",
         "useSemanticElements": "off",
         "useKeyWithClickEvents": "off"
+      },
+      "nursery": {
+        "useSortedClasses": "warn"
       }
     }
   },

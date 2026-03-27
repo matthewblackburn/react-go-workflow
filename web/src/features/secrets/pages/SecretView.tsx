@@ -39,8 +39,8 @@ export default function SecretView() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold">Secret not found</h2>
-          <Link to="/secrets" className="mt-2 text-sm text-primary hover:underline">
+          <h2 className="font-semibold text-xl">Secret not found</h2>
+          <Link to="/secrets" className="mt-2 text-primary text-sm hover:underline">
             Back to secrets
           </Link>
         </div>
@@ -53,7 +53,7 @@ export default function SecretView() {
       <div className="mb-6">
         <Link
           to="/secrets"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
+          className="mb-4 inline-flex items-center gap-1 text-muted-foreground text-sm hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to secrets
@@ -63,7 +63,7 @@ export default function SecretView() {
           <div>
             <div className="flex items-center gap-3">
               <KeyRound className="h-5 w-5 text-muted-foreground" />
-              <h1 className="text-2xl font-bold font-mono">{secret.key}</h1>
+              <h1 className="font-bold font-mono text-2xl">{secret.key}</h1>
             </div>
             {secret.description && (
               <p className="mt-2 text-muted-foreground">{secret.description}</p>
@@ -90,7 +90,7 @@ export default function SecretView() {
       <div className="rounded-lg border">
         <div className="divide-y">
           <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-sm font-medium text-muted-foreground">Key</span>
+            <span className="font-medium text-muted-foreground text-sm">Key</span>
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm">{secret.key}</span>
               <button
@@ -106,37 +106,37 @@ export default function SecretView() {
             </div>
           </div>
           <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-sm font-medium text-muted-foreground">Value</span>
+            <span className="font-medium text-muted-foreground text-sm">Value</span>
             <Badge variant="secondary" className="font-mono">
               ••••••••
             </Badge>
           </div>
           {secret.description && (
             <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-sm font-medium text-muted-foreground">Description</span>
+              <span className="font-medium text-muted-foreground text-sm">Description</span>
               <span className="text-sm">{secret.description}</span>
             </div>
           )}
           <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-sm font-medium text-muted-foreground">Created</span>
-            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <span className="font-medium text-muted-foreground text-sm">Created</span>
+            <span className="flex items-center gap-1.5 text-muted-foreground text-sm">
               <Clock className="h-3.5 w-3.5" />
               {new Date(secret.date_created).toLocaleString()}
             </span>
           </div>
           {secret.date_updated && (
             <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-sm font-medium text-muted-foreground">Updated</span>
-              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <span className="font-medium text-muted-foreground text-sm">Updated</span>
+              <span className="flex items-center gap-1.5 text-muted-foreground text-sm">
                 <Clock className="h-3.5 w-3.5" />
                 {new Date(secret.date_updated).toLocaleString()}
               </span>
             </div>
           )}
           <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-sm font-medium text-muted-foreground">Usage</span>
+            <span className="font-medium text-muted-foreground text-sm">Usage</span>
             <div className="flex items-center gap-2">
-              <code className="rounded bg-muted px-2 py-0.5 text-xs font-mono">
+              <code className="rounded bg-muted px-2 py-0.5 font-mono text-xs">
                 {'{{'}secrets.{secret.key}
                 {'}}'}
               </code>

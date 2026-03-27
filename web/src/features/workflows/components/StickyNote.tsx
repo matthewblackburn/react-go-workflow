@@ -54,8 +54,8 @@ function StickyNoteComponent({ data, selected }: NodeProps & { data: StickyNoteD
             zIndex: 1,
           }}
         />
-        <div className="flex flex-col h-full p-3 pt-4">
-          <p className="flex-1 whitespace-pre-wrap text-xs text-black">
+        <div className="flex h-full flex-col p-3 pt-4">
+          <p className="flex-1 whitespace-pre-wrap text-black text-xs">
             {data.content || 'Double-click to edit...'}
           </p>
         </div>

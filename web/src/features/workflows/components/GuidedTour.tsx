@@ -109,7 +109,7 @@ function TourTooltip({
   return (
     <div
       {...tooltipProps}
-      className="w-[340px] rounded-xl border bg-card text-card-foreground shadow-xl animate-in fade-in-0 zoom-in-95 duration-200"
+      className="fade-in-0 zoom-in-95 w-[340px] animate-in rounded-xl border bg-card text-card-foreground shadow-xl duration-200"
     >
       <div className="p-5">
         {step.title && (
@@ -118,18 +118,18 @@ function TourTooltip({
             <h3 className="font-semibold text-sm">{step.title as string}</h3>
           </div>
         )}
-        <p className="text-sm text-muted-foreground leading-relaxed">{step.content as string}</p>
+        <p className="text-muted-foreground text-sm leading-relaxed">{step.content as string}</p>
       </div>
 
       <div className="flex items-center justify-between border-t px-4 py-3">
         <div className="flex items-center gap-2">
           <button
             {...skipProps}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground text-xs transition-colors hover:text-foreground"
           >
             Skip tour
           </button>
-          <span className="text-xs text-muted-foreground/50">
+          <span className="text-muted-foreground/50 text-xs">
             {index + 1} / {size}
           </span>
         </div>

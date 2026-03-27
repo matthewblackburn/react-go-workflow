@@ -82,13 +82,13 @@ function DragPreview({ stepType }: { stepType: StepType }) {
   const Icon = getIcon(stepType.icon);
   return (
     <div
-      className={`rounded-lg border-2 px-4 py-3 shadow-lg opacity-90 min-w-[180px] ${colorClass}`}
+      className={`min-w-[180px] rounded-lg border-2 px-4 py-3 opacity-90 shadow-lg ${colorClass}`}
     >
       <div className="flex items-center gap-3">
         <div className="rounded-md bg-background/60 p-1.5">
           <Icon className="h-4 w-4" />
         </div>
-        <p className="text-sm font-medium">{stepType.display_name}</p>
+        <p className="font-medium text-sm">{stepType.display_name}</p>
       </div>
     </div>
   );
@@ -611,7 +611,7 @@ function WorkflowBuilderInner() {
                 hasUnsavedChanges={hasUnsavedChanges}
                 executionStatus={executionStatus}
               />
-              <div className="flex flex-1 min-h-0 overflow-hidden">
+              <div className="flex min-h-0 flex-1 overflow-hidden">
                 <StepPalette />
                 <div ref={reactFlowWrapper} data-tour="canvas" className="flex-1">
                   <ReactFlow

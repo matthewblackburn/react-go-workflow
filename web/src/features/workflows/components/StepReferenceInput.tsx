@@ -208,9 +208,9 @@ export function RefPill({
   return (
     <span
       ref={pillRef}
-      className={`relative inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium max-w-full overflow-hidden ${pillColors[prefix] ?? pillColors.steps}`}
+      className={`relative inline-flex max-w-full items-center gap-0.5 overflow-hidden rounded-md px-1.5 py-0.5 font-medium text-[11px] ${pillColors[prefix] ?? pillColors.steps}`}
     >
-      <span className="font-semibold truncate">@{stepName}</span>
+      <span className="truncate font-semibold">@{stepName}</span>
       {!onPathChange ? null : (
         <>
           <span className="opacity-40">&rarr;</span>
@@ -257,7 +257,7 @@ export function RefPill({
                   }
                   e.stopPropagation();
                 }}
-                className="bg-transparent outline-none font-[inherit] text-[inherit] opacity-70 border-none appearance-none"
+                className="appearance-none border-none bg-transparent font-[inherit] text-[inherit] opacity-70 outline-none"
                 style={{
                   padding: 0,
                   margin: 0,
@@ -275,7 +275,7 @@ export function RefPill({
                       top: (pillRef.current?.getBoundingClientRect().bottom ?? 0) + 4,
                       left: pillRef.current?.getBoundingClientRect().left ?? 0,
                     }}
-                    className="z-[9999] max-h-32 w-max min-w-[120px] overflow-y-auto rounded-md border bg-popover p-1 shadow-md pointer-events-auto"
+                    className="pointer-events-auto z-9999 max-h-32 w-max min-w-120px overflow-y-auto rounded-md border bg-popover p-1 shadow-md"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -289,7 +289,7 @@ export function RefPill({
                           e.stopPropagation();
                           commitPath(s);
                         }}
-                        className={`flex w-full cursor-pointer rounded-sm px-2 py-1 text-[11px] text-left ${
+                        className={`flex w-full cursor-pointer rounded-sm px-2 py-1 text-left text-[11px] ${
                           i === suggestionIdx
                             ? 'bg-accent text-accent-foreground'
                             : 'hover:bg-accent hover:text-accent-foreground'
@@ -318,7 +318,7 @@ export function RefPill({
                   setEditing(true);
                 }
               }}
-              className="opacity-60 hover:opacity-100 cursor-text min-w-[2ch] truncate"
+              className="min-w-[2ch] cursor-text truncate opacity-60 hover:opacity-100"
             >
               {path || (
                 <span className={pillAccentColors[prefix] ?? pillAccentColors.steps}>path</span>
@@ -549,7 +549,7 @@ export function StepReferenceInput({
             onFocus={() => setCursorSegmentIdx(0)}
             placeholder={placeholder}
             rows={4}
-            className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-mono"
+            className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 font-mono text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
         ) : (
           <input
@@ -589,7 +589,7 @@ export function StepReferenceInput({
   return (
     <div ref={containerRef} className="relative">
       <div
-        className="flex flex-wrap items-center gap-1 min-h-9 w-full overflow-visible rounded-md border border-input bg-transparent px-2 py-1.5 shadow-xs focus-within:ring-1 focus-within:ring-ring cursor-text"
+        className="flex min-h-9 w-full cursor-text flex-wrap items-center gap-1 overflow-visible rounded-md border border-input bg-transparent px-2 py-1.5 shadow-xs focus-within:ring-1 focus-within:ring-ring"
         onClick={() => inputRef.current?.focus()}
       >
         {renderSegments.map((seg, i) => {
@@ -713,7 +713,7 @@ const MentionDropdown = forwardRef<HTMLDivElement, MentionDropdownProps>(
       <div
         ref={ref}
         style={{ position: 'fixed', top: pos.top, left: pos.left, width: Math.max(pos.width, 180) }}
-        className="z-[9999] max-h-48 overflow-y-auto rounded-md border bg-popover p-1 shadow-md pointer-events-auto"
+        className="pointer-events-auto z-9999 max-h-48 overflow-y-auto rounded-md border bg-popover p-1 shadow-md"
         onMouseDown={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -735,7 +735,7 @@ const MentionDropdown = forwardRef<HTMLDivElement, MentionDropdownProps>(
           >
             <span className="truncate">{step.label}</span>
             {step.prefix === 'workflow' && (
-              <span className="text-[9px] text-muted-foreground ml-auto shrink-0">trigger</span>
+              <span className="ml-auto shrink-0 text-[9px] text-muted-foreground">trigger</span>
             )}
           </div>
         ))}

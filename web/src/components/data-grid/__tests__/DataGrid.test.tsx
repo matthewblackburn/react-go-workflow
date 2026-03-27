@@ -1,4 +1,4 @@
-import { type ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef } from '@tanstack/react-table';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -55,9 +55,7 @@ describe('DataGrid', () => {
     const user = userEvent.setup();
     const onRowClick = vi.fn();
 
-    renderWithProviders(
-      <DataGrid columns={columns} data={mockData} onRowClick={onRowClick} />,
-    );
+    renderWithProviders(<DataGrid columns={columns} data={mockData} onRowClick={onRowClick} />);
 
     await user.click(screen.getByText('Alice'));
 

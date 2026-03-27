@@ -65,7 +65,7 @@ export function TableSelect({ value, onChange }: TableSelectProps) {
 
       {open && (
         <div
-          className="fixed z-[9999] rounded-md border bg-popover shadow-md max-h-[280px] flex flex-col"
+          className="fixed z-9999 flex max-h-280px flex-col rounded-md border bg-popover shadow-md"
           style={{ top: pos.top, left: pos.left, width: pos.width }}
         >
           <div className="p-2">
@@ -77,14 +77,14 @@ export function TableSelect({ value, onChange }: TableSelectProps) {
               autoFocus
             />
           </div>
-          <div className="overflow-y-auto max-h-[220px] p-1">
+          <div className="max-h-[220px] overflow-y-auto p-1">
             {isLoading && (
               <div className="flex items-center justify-center py-3">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
             )}
             {!isLoading && filtered.length === 0 && (
-              <p className="px-2 py-1.5 text-xs text-muted-foreground">No tables found</p>
+              <p className="px-2 py-1.5 text-muted-foreground text-xs">No tables found</p>
             )}
             {filtered.map((table) => (
               <button

@@ -80,7 +80,7 @@ function LabeledEdgeComponent({
                 backgroundColor: labelColor ? `${labelColor}20` : undefined,
                 color: labelColor ?? undefined,
               }}
-              className="rounded-full px-2 py-0.5 text-[10px] font-semibold border border-current/20"
+              className="rounded-full border border-current/20 px-2 py-0.5 font-semibold text-[10px]"
             >
               {label}
             </span>
@@ -95,7 +95,7 @@ function LabeledEdgeComponent({
                 backgroundColor: labelColor ? `${labelColor}20` : undefined,
                 color: labelColor ?? undefined,
               }}
-              className="cursor-pointer rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors hover:opacity-80 border border-current/20"
+              className="cursor-pointer rounded-full border border-current/20 px-2 py-0.5 font-semibold text-[10px] transition-colors hover:opacity-80"
             >
               {label}
             </button>

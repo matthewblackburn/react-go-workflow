@@ -31,7 +31,7 @@ const columns: ColumnDef<Secret, unknown>[] = [
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="font-mono font-medium">{row.original.key}</span>
+        <span className="font-medium font-mono">{row.original.key}</span>
       </div>
     ),
   },

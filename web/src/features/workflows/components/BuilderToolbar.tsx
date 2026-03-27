@@ -44,21 +44,21 @@ export function BuilderToolbar({
   return (
     <div className="flex h-12 items-center justify-between border-b bg-background px-4">
       <div className="flex items-center gap-3">
-        <h2 className="text-sm font-semibold">{workflowName}</h2>
+        <h2 className="font-semibold text-sm">{workflowName}</h2>
         {hasUnsavedChanges && (
-          <span className="text-xs text-muted-foreground">Unsaved changes</span>
+          <span className="text-muted-foreground text-xs">Unsaved changes</span>
         )}
         {executionStatus === 'running' && (
-          <span className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400">
+          <span className="flex items-center gap-1.5 text-blue-600 text-xs dark:text-blue-400">
             <Loader2 className="h-3 w-3 animate-spin" />
             Running...
           </span>
         )}
         {executionStatus === 'completed' && (
-          <span className="text-xs text-green-600 dark:text-green-400">Completed</span>
+          <span className="text-green-600 text-xs dark:text-green-400">Completed</span>
         )}
         {executionStatus === 'failed' && (
-          <span className="text-xs text-red-600 dark:text-red-400">Failed</span>
+          <span className="text-red-600 text-xs dark:text-red-400">Failed</span>
         )}
       </div>
 
@@ -147,7 +147,7 @@ export function BuilderToolbar({
         <Button
           data-tour="toolbar-run"
           size="sm"
-          className="h-8 bg-green-600 hover:bg-green-700 text-white"
+          className="h-8 bg-green-600 text-white hover:bg-green-700"
           onClick={onExecute}
           disabled={isExecuting}
         >

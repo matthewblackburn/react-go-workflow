@@ -5,20 +5,21 @@ import { FilterBar, type FilterFieldConfig } from '../FilterBar';
 
 const fields: FilterFieldConfig[] = [
   { field: 'name', label: 'Name', type: 'text' },
-  { field: 'status', label: 'Status', type: 'exact', options: [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-  ]},
+  {
+    field: 'status',
+    label: 'Status',
+    type: 'exact',
+    options: [
+      { value: 'active', label: 'Active' },
+      { value: 'inactive', label: 'Inactive' },
+    ],
+  },
 ];
 
 describe('FilterBar', () => {
   it('renders filter pills for active filters', () => {
     render(
-      <FilterBar
-        fields={fields}
-        filters={{ name: 'contains:test' }}
-        onFilterChange={vi.fn()}
-      />,
+      <FilterBar fields={fields} filters={{ name: 'contains:test' }} onFilterChange={vi.fn()} />,
     );
 
     expect(screen.getByText('Name')).toBeInTheDocument();
@@ -30,9 +31,7 @@ describe('FilterBar', () => {
     const user = userEvent.setup();
     const onFilterChange = vi.fn();
 
-    render(
-      <FilterBar fields={fields} filters={{}} onFilterChange={onFilterChange} />,
-    );
+    render(<FilterBar fields={fields} filters={{}} onFilterChange={onFilterChange} />);
 
     // Click the "+" button to add a filter
     const addButton = screen.getByRole('button');
@@ -76,9 +75,7 @@ describe('FilterBar', () => {
     // The remove button contains an X icon and is the last button in the pill
     const removeButtons = screen.getAllByRole('button');
     // The remove button is the one at the end of the pill group
-    const removeButton = removeButtons.find((btn) =>
-      btn.querySelector('.lucide-x'),
-    );
+    const removeButton = removeButtons.find((btn) => btn.querySelector('.lucide-x'));
     expect(removeButton).toBeTruthy();
     await user.click(removeButton!);
 

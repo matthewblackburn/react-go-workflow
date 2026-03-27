@@ -34,9 +34,7 @@ describe('useExecutionWS', () => {
     renderHook(() => useExecutionWS('exec-123'));
 
     expect(MockWebSocket.instances).toHaveLength(1);
-    expect(MockWebSocket.instances[0].url).toBe(
-      'ws://localhost:3000/ws/executions/exec-123',
-    );
+    expect(MockWebSocket.instances[0].url).toBe('ws://localhost:3000/ws/executions/exec-123');
   });
 
   it('updates stepStatuses map on step_status event', () => {

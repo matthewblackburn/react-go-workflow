@@ -90,7 +90,7 @@ export function TimezoneSelect({ value, onChange }: TimezoneSelectProps) {
       >
         <span className={`flex-1 text-left ${value ? 'text-foreground' : 'text-muted-foreground'}`}>
           {displayValue}
-          {offset && <span className="ml-1 text-xs text-muted-foreground">{offset}</span>}
+          {offset && <span className="ml-1 text-muted-foreground text-xs">{offset}</span>}
         </span>
         <ChevronDown
           className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`}
@@ -99,7 +99,7 @@ export function TimezoneSelect({ value, onChange }: TimezoneSelectProps) {
 
       {open && (
         <div
-          className="fixed z-[9999] rounded-md border bg-popover shadow-md max-h-[280px] flex flex-col"
+          className="fixed z-9999 flex max-h-280px flex-col rounded-md border bg-popover shadow-md"
           style={{ top: pos.top, left: pos.left, width: pos.width }}
         >
           <div className="p-2">
@@ -111,9 +111,9 @@ export function TimezoneSelect({ value, onChange }: TimezoneSelectProps) {
               autoFocus
             />
           </div>
-          <div className="overflow-y-auto max-h-[220px] p-1">
+          <div className="max-h-[220px] overflow-y-auto p-1">
             {filtered.length === 0 && (
-              <p className="px-2 py-1.5 text-xs text-muted-foreground">No timezones found</p>
+              <p className="px-2 py-1.5 text-muted-foreground text-xs">No timezones found</p>
             )}
             {filtered.map((tz) => (
               <button

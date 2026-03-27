@@ -113,7 +113,7 @@ function GeneralTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => 
 
   return (
     <>
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-4 p-4">
           <div className="space-y-2">
             <Label htmlFor="wf-name">Name</Label>
@@ -217,9 +217,9 @@ function TriggerSection({
     >
       <div className="flex items-start gap-3">
         <div className="mt-0.5 shrink-0 text-muted-foreground">{icon}</div>
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium">{title}</h4>
+            <h4 className="font-medium text-sm">{title}</h4>
             <button
               type="button"
               onClick={() => onToggle(!enabled)}
@@ -234,7 +234,7 @@ function TriggerSection({
               />
             </button>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">{description}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{description}</p>
         </div>
       </div>
       {enabled && <div className="mt-3 space-y-3">{children}</div>}
@@ -278,9 +278,9 @@ function TriggersTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () =>
 
   return (
     <>
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-3 p-4">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             All workflows can be run manually. Enable additional triggers below.
           </p>
 
@@ -329,7 +329,7 @@ function TriggersTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () =>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="shrink-0 h-9 w-9"
+                    className="h-9 w-9 shrink-0"
                     onClick={() => {
                       navigator.clipboard.writeText(
                         `${window.location.origin}/webhooks/${webhookSlug}`,
@@ -351,7 +351,7 @@ function TriggersTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () =>
                 Generate Webhook URL
               </Button>
             )}
-            <div className="flex items-center gap-2 mt-2">
+            <div className="mt-2 flex items-center gap-2">
               <Checkbox
                 id="webhook-sync"
                 checked={triggerConfig.webhook_sync ?? false}
@@ -428,11 +428,11 @@ function JsonModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[90vw] sm:max-w-4xl max-h-[80vh] flex flex-col">
+      <DialogContent className="flex max-h-[80vh] w-[90vw] flex-col sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-sm">{title}</DialogTitle>
         </DialogHeader>
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-hidden">
           <JsonViewer data={data} maxHeight="60vh" />
         </div>
       </DialogContent>
@@ -462,16 +462,16 @@ function ExecutionDetail({ executionId }: { executionId: string }) {
 
   if (steps.length === 0) {
     return (
-      <div className="px-4 py-2 space-y-2">
-        <p className="text-xs text-muted-foreground">No step data available</p>
+      <div className="space-y-2 px-4 py-2">
+        <p className="text-muted-foreground text-xs">No step data available</p>
         {execution?.error && (
-          <pre className="text-[11px] text-red-500 whitespace-pre-wrap break-words bg-red-50 dark:bg-red-950 rounded p-2">
+          <pre className="whitespace-pre-wrap break-words rounded bg-red-50 p-2 text-[11px] text-red-500 dark:bg-red-950">
             {execution.error}
           </pre>
         )}
         {execution?.output && Object.keys(execution.output).length > 0 && (
           <details>
-            <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground">
+            <summary className="cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
               Output
             </summary>
             <JsonViewer data={execution.output} />
@@ -490,23 +490,23 @@ function ExecutionDetail({ executionId }: { executionId: string }) {
           <div key={step.id} className="rounded-md bg-muted/30 px-3 py-2">
             <div className="flex items-center gap-2">
               {statusIcons[step.status] ?? statusIcons.pending}
-              <span className="text-xs font-medium flex-1 truncate">{stepName}</span>
+              <span className="flex-1 truncate font-medium text-xs">{stepName}</span>
               <span className="text-[10px] text-muted-foreground capitalize">{step.status}</span>
               {duration && <span className="text-[10px] text-muted-foreground">{duration}</span>}
             </div>
             {step.error && (
-              <pre className="mt-1.5 text-[10px] text-red-500 whitespace-pre-wrap break-words overflow-hidden">
+              <pre className="mt-1.5 overflow-hidden whitespace-pre-wrap break-words text-[10px] text-red-500">
                 {step.error}
               </pre>
             )}
             {step.output && Object.keys(step.output).length > 0 && (
-              <details className="mt-1.5 group">
-                <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground flex items-center list-none [&::-webkit-details-marker]:hidden">
-                  <ChevronDown className="h-3 w-3 mr-1 shrink-0 transition-transform -rotate-90 group-open:rotate-0" />
+              <details className="group mt-1.5">
+                <summary className="flex cursor-pointer list-none items-center text-[10px] text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+                  <ChevronDown className="mr-1 h-3 w-3 shrink-0 -rotate-90 transition-transform group-open:rotate-0" />
                   Output
                   <button
                     type="button"
-                    className="ml-auto p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                    className="ml-auto rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                     onClick={(e) => {
                       e.preventDefault();
                       setModalData({ title: stepName, data: step.output! });
@@ -551,12 +551,12 @@ function InputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => vo
 
   return (
     <>
-      <ScrollArea className="flex-1 min-h-0">
-        <div className="p-4 space-y-4">
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="space-y-4 p-4">
           <div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Define the data this workflow expects when triggered. Access fields in steps via{' '}
-              <code className="text-[10px] bg-muted px-1 py-0.5 rounded">
+              <code className="rounded bg-muted px-1 py-0.5 text-[10px]">
                 {'{{workflow.input.fieldName}}'}
               </code>
             </p>
@@ -631,14 +631,14 @@ function RefPicker({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="rounded px-1.5 h-5 text-[11px] leading-5 text-muted-foreground hover:bg-muted/50 transition-colors italic"
+        className="h-5 rounded px-1.5 text-[11px] text-muted-foreground italic leading-5 transition-colors hover:bg-muted/50"
       >
         {placeholder}
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full z-50 mt-1 max-h-48 min-w-[160px] overflow-y-auto rounded-md border bg-popover p-1 shadow-md">
+          <div className="absolute top-full left-0 z-50 mt-1 max-h-48 min-w-160px overflow-y-auto rounded-md border bg-popover p-1 shadow-md">
             {options.length === 0 ? (
               <div className="px-2 py-1.5 text-[11px] text-muted-foreground">No options</div>
             ) : (
@@ -650,7 +650,7 @@ function RefPicker({
                     onChange(buildRef(opt.id, opt.label));
                     setOpen(false);
                   }}
-                  className="flex w-full rounded-sm px-2 py-1.5 text-[11px] text-left hover:bg-accent hover:text-accent-foreground"
+                  className="flex w-full rounded-sm px-2 py-1.5 text-left text-[11px] hover:bg-accent hover:text-accent-foreground"
                 >
                   {opt.label}
                 </button>
@@ -771,12 +771,12 @@ function OutputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => v
 
   return (
     <>
-      <ScrollArea className="flex-1 min-h-0">
-        <div className="p-4 space-y-4">
-          <p className="text-xs text-muted-foreground">
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="space-y-4 p-4">
+          <p className="text-muted-foreground text-xs">
             Define the output this workflow produces. Set each field's value to a step expression
             like{' '}
-            <code className="text-[10px] bg-muted px-1 py-0.5 rounded">
+            <code className="rounded bg-muted px-1 py-0.5 text-[10px]">
               {'{{steps.StepName.output.field}}'}
             </code>
             . When triggered via a synchronous webhook, this is returned in the response.
@@ -877,9 +877,9 @@ function NotificationsTab({ workflow, onSaved }: { workflow: Workflow; onSaved: 
 
   return (
     <>
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-3 p-4">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Get notified when this workflow finishes running.
           </p>
 
@@ -965,8 +965,8 @@ function HistoryTab({ workflowId }: { workflowId: string }) {
   if (!executions?.length) {
     return (
       <div className="py-8 text-center">
-        <p className="text-sm text-muted-foreground">No executions yet</p>
-        <p className="text-xs text-muted-foreground mt-1">Click Run to execute this workflow</p>
+        <p className="text-muted-foreground text-sm">No executions yet</p>
+        <p className="mt-1 text-muted-foreground text-xs">Click Run to execute this workflow</p>
       </div>
     );
   }
@@ -981,22 +981,22 @@ function HistoryTab({ workflowId }: { workflowId: string }) {
             <button
               type="button"
               onClick={() => setExpandedId(isExpanded ? null : exec.id)}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors"
+              className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50"
             >
               {statusIcons[exec.status] ?? statusIcons.pending}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-[10px] shrink-0">
+                  <Badge variant="outline" className="shrink-0 text-[10px]">
                     {exec.trigger_type}
                   </Badge>
-                  <span className="text-xs text-muted-foreground capitalize">{exec.status}</span>
+                  <span className="text-muted-foreground text-xs capitalize">{exec.status}</span>
                 </div>
                 {exec.error && (
-                  <p className="text-[11px] text-red-500 mt-0.5 line-clamp-1">{exec.error}</p>
+                  <p className="mt-0.5 line-clamp-1 text-[11px] text-red-500">{exec.error}</p>
                 )}
               </div>
-              <div className="text-right shrink-0">
-                <p className="text-xs text-muted-foreground">
+              <div className="shrink-0 text-right">
+                <p className="text-muted-foreground text-xs">
                   {timeAgo(exec.started_at ?? exec.date_created)}
                 </p>
                 {duration && <p className="text-[10px] text-muted-foreground">{duration}</p>}
@@ -1025,13 +1025,13 @@ export function WorkflowSettingsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[400px] sm:w-[440px] p-0 flex flex-col gap-0">
-        <SheetHeader className="px-6 py-4 border-b">
+      <SheetContent className="flex w-[400px] flex-col gap-0 p-0 sm:w-[440px]">
+        <SheetHeader className="border-b px-6 py-4">
           <SheetTitle>Workflow Settings</SheetTitle>
         </SheetHeader>
 
         {workflow ? (
-          <Tabs defaultValue="general" className="flex flex-1 flex-col min-h-0 gap-0">
+          <Tabs defaultValue="general" className="flex min-h-0 flex-1 flex-col gap-0">
             <TabsList className="w-full rounded-none border-b bg-transparent px-4">
               <TabsTrigger value="general" className="flex-1 text-xs">
                 General
@@ -1052,29 +1052,29 @@ export function WorkflowSettingsSheet({
                 History
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="general" className="flex-1 min-h-0 mt-0 flex flex-col">
+            <TabsContent value="general" className="mt-0 flex min-h-0 flex-1 flex-col">
               <GeneralTab workflow={workflow} onSaved={handleSaved} />
             </TabsContent>
-            <TabsContent value="input" className="flex-1 min-h-0 mt-0 flex flex-col">
+            <TabsContent value="input" className="mt-0 flex min-h-0 flex-1 flex-col">
               <InputTab workflow={workflow} onSaved={handleSaved} />
             </TabsContent>
-            <TabsContent value="output" className="flex-1 min-h-0 mt-0 flex flex-col">
+            <TabsContent value="output" className="mt-0 flex min-h-0 flex-1 flex-col">
               <OutputTab workflow={workflow} onSaved={handleSaved} />
             </TabsContent>
-            <TabsContent value="triggers" className="flex-1 min-h-0 mt-0 flex flex-col">
+            <TabsContent value="triggers" className="mt-0 flex min-h-0 flex-1 flex-col">
               <TriggersTab workflow={workflow} onSaved={handleSaved} />
             </TabsContent>
-            <TabsContent value="notifications" className="flex-1 min-h-0 mt-0 flex flex-col">
+            <TabsContent value="notifications" className="mt-0 flex min-h-0 flex-1 flex-col">
               <NotificationsTab workflow={workflow} onSaved={handleSaved} />
             </TabsContent>
-            <TabsContent value="history" className="flex-1 min-h-0 mt-0">
+            <TabsContent value="history" className="mt-0 min-h-0 flex-1">
               <ScrollArea className="h-full">
                 <HistoryTab workflowId={workflow.id} />
               </ScrollArea>
             </TabsContent>
           </Tabs>
         ) : (
-          <div className="flex items-center justify-center flex-1">
+          <div className="flex flex-1 items-center justify-center">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         )}

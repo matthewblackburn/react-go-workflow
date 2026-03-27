@@ -104,7 +104,7 @@ export default function WebhookTest() {
   return (
     <div className="mx-auto max-w-3xl p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Test Webhook</h1>
+        <h1 className="font-bold text-2xl tracking-tight">Test Webhook</h1>
         <p className="text-muted-foreground">
           Select a webhook-enabled workflow and send a test payload
         </p>
@@ -113,14 +113,14 @@ export default function WebhookTest() {
       <div className="space-y-6">
         {/* Workflow selector */}
         <div className="space-y-2">
-          <span className="text-sm font-medium">Workflow</span>
+          <span className="font-medium text-sm">Workflow</span>
           <Select value={selectedId ?? ''} onValueChange={handleSelect}>
             <SelectTrigger>
               <SelectValue placeholder="Select a webhook-enabled workflow..." />
             </SelectTrigger>
             <SelectContent>
               {webhookWorkflows.length === 0 ? (
-                <div className="px-2 py-3 text-sm text-muted-foreground">
+                <div className="px-2 py-3 text-muted-foreground text-sm">
                   No workflows with webhooks enabled
                 </div>
               ) : (
@@ -138,9 +138,9 @@ export default function WebhookTest() {
           <>
             {/* Webhook URL */}
             <div className="space-y-2">
-              <span className="text-sm font-medium">Webhook URL</span>
+              <span className="font-medium text-sm">Webhook URL</span>
               <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
-                <code className="flex-1 text-sm font-mono truncate">{webhookUrl}</code>
+                <code className="flex-1 truncate font-mono text-sm">{webhookUrl}</code>
                 <button
                   type="button"
                   className="shrink-0 rounded p-1 text-muted-foreground hover:text-foreground"
@@ -156,7 +156,7 @@ export default function WebhookTest() {
 
             {/* Input builder */}
             <div className="space-y-2">
-              <span className="text-sm font-medium">Input Payload</span>
+              <span className="font-medium text-sm">Input Payload</span>
               <div className="rounded-md border p-3">
                 {selectedWorkflow.input_schema ? (
                   <JsonBuilder
@@ -166,7 +166,7 @@ export default function WebhookTest() {
                     emit="values"
                   />
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-muted-foreground text-sm italic">
                     This workflow has no input schema defined. The webhook will be sent with an
                     empty payload.
                   </p>
@@ -187,7 +187,7 @@ export default function WebhookTest() {
                 </label>
               </div>
               {waitForResult && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   The request will wait up to 30 seconds for the workflow to complete and return the
                   output.
                 </p>
@@ -213,17 +213,17 @@ export default function WebhookTest() {
             {/* Response */}
             {response && (
               <div className="space-y-2">
-                <span className="text-sm font-medium">
+                <span className="font-medium text-sm">
                   Response
                   {response.error && (
-                    <span className="ml-2 text-xs text-red-500">{response.error}</span>
+                    <span className="ml-2 text-red-500 text-xs">{response.error}</span>
                   )}
                 </span>
-                <div className="rounded-md border overflow-hidden">
+                <div className="overflow-hidden rounded-md border">
                   {response.data ? (
                     <JsonViewer data={response.data} maxHeight="200px" />
                   ) : (
-                    <p className="p-3 text-sm text-muted-foreground">No response body</p>
+                    <p className="p-3 text-muted-foreground text-sm">No response body</p>
                   )}
                 </div>
                 {response.data?.execution_id && (

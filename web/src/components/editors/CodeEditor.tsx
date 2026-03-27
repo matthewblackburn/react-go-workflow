@@ -62,7 +62,7 @@ export function CodeViewer({
   }, [language, editable]);
 
   return (
-    <div className="rounded-md border bg-muted/30 overflow-hidden" style={{ maxHeight }}>
+    <div className="overflow-hidden rounded-md border bg-muted/30" style={{ maxHeight }}>
       <div className="overflow-y-auto" style={{ maxHeight }}>
         <CodeMirror
           value={value}

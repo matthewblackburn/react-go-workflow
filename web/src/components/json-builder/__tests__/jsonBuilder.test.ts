@@ -213,9 +213,7 @@ describe('treeToJson', () => {
         name: 'address',
         type: 'object',
         description: '',
-        properties: [
-          { name: 'city', type: 'string', description: '', default: 'Sydney' },
-        ],
+        properties: [{ name: 'city', type: 'string', description: '', default: 'Sydney' }],
       },
     ];
     expect(treeToJson(fields)).toEqual({ address: { city: 'Sydney' } });

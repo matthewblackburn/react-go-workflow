@@ -106,7 +106,7 @@ function StepNodeComponent({ id, data, selected }: NodeProps & { data: StepNodeD
 
   return (
     <div
-      className={`rounded-lg border-2 px-4 py-3 shadow-sm transition-shadow w-[260px] ${
+      className={`w-[260px] rounded-lg border-2 px-4 py-3 shadow-sm transition-shadow ${
         categoryColors[category] ?? categoryColors.action
       } ${selected ? 'ring-2 ring-primary ring-offset-2' : ''}`}
     >
@@ -122,11 +122,11 @@ function StepNodeComponent({ id, data, selected }: NodeProps & { data: StepNodeD
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium leading-tight">{data.label}</p>
+          <p className="truncate font-medium text-sm leading-tight">{data.label}</p>
           {data.stepType && (
             <Badge
               variant="secondary"
-              className={`mt-1 text-[10px] px-1.5 py-0 ${categoryBadgeColors[category] ?? ''}`}
+              className={`mt-1 px-1.5 py-0 text-[10px] ${categoryBadgeColors[category] ?? ''}`}
             >
               {data.stepType.display_name}
             </Badge>
@@ -135,10 +135,10 @@ function StepNodeComponent({ id, data, selected }: NodeProps & { data: StepNodeD
       </div>
 
       {quickEditFields.length > 0 && (
-        <div className="mt-2 space-y-1.5 nodrag nowheel" onClick={(e) => e.stopPropagation()}>
+        <div className="nodrag nowheel mt-2 space-y-1.5" onClick={(e) => e.stopPropagation()}>
           {quickEditFields.map((field) => (
             <div key={field.key}>
-              <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider block">
+              <span className="block font-medium text-[9px] text-muted-foreground uppercase tracking-wider">
                 {field.title}
               </span>
               <div className="mt-0.5">
