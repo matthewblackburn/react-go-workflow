@@ -29,11 +29,11 @@ var builtinTypes = []seedType{
 		ConfigSchema: M{
 			"type": "object",
 			"properties": M{
-				"url":    M{"type": "string", "title": "URL", "description": "The URL to send the request to", "placeholder": "https://api.example.com/data", "quickEdit": true},
-				"method": M{"type": "string", "title": "Method", "enum": []string{"GET", "POST", "PUT", "PATCH", "DELETE"}, "default": "GET"},
-				"headers": M{"type": "object", "title": "Headers", "description": "Key-value pairs to send as request headers",
+				"url":    M{"type": "string", "title": "URL", "description": "The URL to send the request to", "placeholder": "https://api.example.com/data", "quickEdit": true, "order": 0},
+				"method": M{"type": "string", "title": "Method", "enum": []string{"GET", "POST", "PUT", "PATCH", "DELETE"}, "default": "GET", "order": 1},
+				"headers": M{"type": "object", "title": "Headers", "description": "Key-value pairs to send as request headers", "order": 2,
 					"additionalProperties": M{"type": "string"}},
-				"body":      M{"type": "string", "title": "Body", "description": "Request body (for POST/PUT/PATCH)", "format": "json"},
+				"body":      M{"type": "string", "title": "Body", "description": "Request body (for POST/PUT/PATCH)", "format": "typed-value", "order": 3},
 			},
 			"required": []string{"url", "method"},
 		},

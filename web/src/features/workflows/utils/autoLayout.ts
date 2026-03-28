@@ -2,8 +2,8 @@ import dagre from '@dagrejs/dagre';
 import { type Node, Position, type Edge as RFEdge } from '@xyflow/react';
 
 const STEP_NODE_WIDTH = 260;
-const STEP_NODE_HEIGHT = 100;
-const NODE_GAP = 40;
+const STEP_NODE_HEIGHT = 140;
+const NODE_GAP = 50;
 
 function getNodeHeight(node: Node): number {
   return node.measured?.height ?? STEP_NODE_HEIGHT;
@@ -55,20 +55,52 @@ export function getLayoutedNodes(nodes: Node[], edges: RFEdge[]): Node[] {
     ranks.get(r)!.push(id);
   }
 
-  // Build condition branch info and error-path tracking
-  const conditionChildren = new Map<string, { yes: Set<string>; no: Set<string> }>();
+  // Build condition branch info and error-path tracking.
+  // Propagate branch assignment through the graph so downstream nodes
+  // inherit the Yes/No classification of their ancestor branch.
+  const adjacency = new Map<string, string[]>();
   const errorTargets = new Set<string>();
+  const directYes = new Set<string>();
+  const directNo = new Set<string>();
+
   for (const edge of edges) {
+    const targets = adjacency.get(edge.source) ?? [];
+    targets.push(edge.target);
+    adjacency.set(edge.source, targets);
+
     const handle = edge.sourceHandle ?? (edge.data as any)?.sourceOutput;
-    if (handle === 'true' || handle === 'false') {
-      const group = conditionChildren.get(edge.source) ?? { yes: new Set(), no: new Set() };
-      if (handle === 'true') group.yes.add(edge.target);
-      else group.no.add(edge.target);
-      conditionChildren.set(edge.source, group);
+    if (handle === 'true') directYes.add(edge.target);
+    if (handle === 'false') directNo.add(edge.target);
+    if ((edge.data as any)?.edgeType === 'error') errorTargets.add(edge.target);
+  }
+
+  // BFS from Yes/No roots to propagate branch membership
+  const yesBranch = new Set<string>();
+  const noBranch = new Set<string>();
+
+  function propagate(roots: Set<string>, result: Set<string>) {
+    const queue = [...roots];
+    while (queue.length > 0) {
+      const id = queue.pop()!;
+      if (result.has(id)) continue;
+      result.add(id);
+      for (const child of adjacency.get(id) ?? []) {
+        queue.push(child);
+      }
     }
-    if ((edge.data as any)?.edgeType === 'error') {
-      errorTargets.add(edge.target);
-    }
+  }
+
+  propagate(directYes, yesBranch);
+  propagate(directNo, noBranch);
+
+  // Nodes in both branches (merge points) are neutral
+  const mergeNodes = new Set<string>();
+  for (const id of yesBranch) {
+    if (noBranch.has(id)) mergeNodes.add(id);
+  }
+  for (const id of mergeNodes) {
+    yesBranch.delete(id);
+    noBranch.delete(id);
   }
 
   // For each rank, sort nodes: Yes-branch first, normal, No-branch, error-path last
@@ -76,11 +108,11 @@ export function getLayoutedNodes(nodes: Node[], edges: RFEdge[]): Node[] {
 
   for (const [r, ids] of ranks) {
     ids.sort((a, b) => {
-      const aIsYes = [...conditionChildren.values()].some((g) => g.yes.has(a));
-      const aIsNo = [...conditionChildren.values()].some((g) => g.no.has(a));
+      const aIsYes = yesBranch.has(a);
+      const aIsNo = noBranch.has(a);
       const aIsError = errorTargets.has(a);
-      const bIsYes = [...conditionChildren.values()].some((g) => g.yes.has(b));
-      const bIsNo = [...conditionChildren.values()].some((g) => g.no.has(b));
+      const bIsYes = yesBranch.has(b);
+      const bIsNo = noBranch.has(b);
       const bIsError = errorTargets.has(b);
 
       const aOrder = aIsYes ? 0 : aIsError ? 3 : aIsNo ? 2 : 1;

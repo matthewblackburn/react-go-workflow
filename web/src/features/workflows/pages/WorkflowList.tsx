@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Clock, Copy, Database, Globe, Play, Plus } from 'lucide-react';
+import { Clock, Copy, Database, Globe, MoreVertical, Play, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -81,9 +81,52 @@ const columns: ColumnDef<Workflow, unknown>[] = [
   },
 ];
 
-function WorkflowTile({ workflow }: { workflow: Workflow }) {
+function WorkflowTile({
+  workflow,
+  onDelete,
+  onClone,
+}: { workflow: Workflow; onDelete: () => void; onClone: () => void }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="group relative rounded-lg border bg-card p-5 transition-shadow hover:shadow-md">
+      <div className="absolute top-3 right-3">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(!menuOpen);
+            }}
+            className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }} />
+              <div className="absolute top-full right-0 z-50 mt-1 min-w-[120px] rounded-md border bg-popover p-1 shadow-md">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onClone(); setMenuOpen(false); }}
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-accent"
+                >
+                  <Copy className="h-3 w-3" />
+                  Duplicate
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onDelete(); setMenuOpen(false); }}
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs text-red-500 hover:bg-accent"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Delete
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
       <div className="mb-3">
         <h3 className="truncate font-semibold">{workflow.name}</h3>
         {workflow.description && (
@@ -232,7 +275,13 @@ export default function WorkflowList() {
             New Workflow
           </Button>
         }
-        tileRenderer={(wf) => <WorkflowTile workflow={wf} />}
+        tileRenderer={(wf) => (
+          <WorkflowTile
+            workflow={wf}
+            onDelete={() => deleteMutation.mutate(wf.id)}
+            onClone={() => cloneMutation.mutate(wf.id)}
+          />
+        )}
         viewMode={viewMode}
         onViewModeChange={(mode) => {
           setSearchParams(

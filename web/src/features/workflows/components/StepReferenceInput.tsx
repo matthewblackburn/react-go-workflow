@@ -217,7 +217,7 @@ export function RefPill({
   return (
     <span
       ref={pillRef}
-      className={`relative inline-flex max-w-full items-center gap-0.5 overflow-hidden rounded-md px-1.5 py-0.5 font-medium text-[11px] ${pillColors[prefix] ?? pillColors.steps}`}
+      className={`relative inline-flex min-w-0 max-w-full shrink items-center gap-0.5 overflow-hidden rounded-md px-1.5 py-0.5 font-medium text-[11px] ${pillColors[prefix] ?? pillColors.steps}`}
     >
       <span className="truncate font-semibold">@{stepName}</span>
       {!onPathChange ? null : (
@@ -598,7 +598,7 @@ export function StepReferenceInput({
   return (
     <div ref={containerRef} className="relative">
       <div
-        className="flex min-h-9 w-full cursor-text flex-wrap items-center gap-1 overflow-visible rounded-md border border-input bg-transparent px-2 py-1.5 shadow-xs focus-within:ring-1 focus-within:ring-ring"
+        className="flex min-h-9 w-full min-w-0 cursor-text flex-wrap items-center gap-1 overflow-x-auto rounded-md border border-input bg-transparent px-2 py-1.5 shadow-xs focus-within:ring-1 focus-within:ring-ring"
         onClick={() => inputRef.current?.focus()}
       >
         {renderSegments.map((seg, i) => {
@@ -679,7 +679,7 @@ export function StepReferenceInput({
               onFocus={() => setCursorSegmentIdx(i)}
               placeholder={i === 0 && renderSegments.length === 1 ? placeholder : undefined}
               className={inputClassName}
-              style={{ width: `${Math.max(seg.value.length, 2)}ch` }}
+              style={{ width: `${Math.max(seg.value.length, 2)}ch`, maxWidth: '100%' }}
             />
           );
         })}

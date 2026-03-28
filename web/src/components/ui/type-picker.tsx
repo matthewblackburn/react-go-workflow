@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export interface TypeOption {
   value: string;
@@ -15,6 +15,8 @@ export const VALUE_TYPES: TypeOption[] = [
   { value: 'string', label: 'String', letter: 'S', dot: 'bg-green-500', bg: 'bg-green-500/15', text: 'text-green-500' },
   { value: 'number', label: 'Number', letter: 'N', dot: 'bg-blue-500', bg: 'bg-blue-500/15', text: 'text-blue-500' },
   { value: 'boolean', label: 'Boolean', letter: 'B', dot: 'bg-amber-500', bg: 'bg-amber-500/15', text: 'text-amber-500' },
+  { value: 'object', label: 'Object', letter: 'O', dot: 'bg-violet-500', bg: 'bg-violet-500/15', text: 'text-violet-500' },
+  { value: 'array', label: 'Array', letter: 'A', dot: 'bg-pink-500', bg: 'bg-pink-500/15', text: 'text-pink-500' },
   { value: 'datetime', label: 'Date/Time', letter: 'D', dot: 'bg-cyan-500', bg: 'bg-cyan-500/15', text: 'text-cyan-500' },
 ];
 
@@ -40,8 +42,18 @@ export function TypeBadge({
   onChange?: (type: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [flipUp, setFlipUp] = useState(false);
   const ref = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const info = getTypeInfo(type, types);
+
+  useEffect(() => {
+    if (open && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setFlipUp(spaceBelow < 250);
+    }
+  }, [open]);
 
   if (!onChange) {
     return (
@@ -69,7 +81,10 @@ export function TypeBadge({
       {open && (
         <>
           <div className="fixed inset-0 z-9998" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 z-9999 mt-1 min-w-[130px] rounded-md border bg-popover p-1 shadow-md">
+          <div
+            ref={dropdownRef}
+            className={`absolute left-0 z-9999 min-w-[130px] rounded-md border bg-popover p-1 shadow-md ${flipUp ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+          >
             {types.map((t) => (
               <button
                 key={t.value}

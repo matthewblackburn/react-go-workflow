@@ -11,21 +11,40 @@ type JSONParseRunner struct{}
 func (r *JSONParseRunner) Run(ctx context.Context, config map[string]any, input map[string]any) (map[string]any, error) {
 	source := config["source"]
 
+	if source == nil {
+		return nil, fmt.Errorf("source is empty — nothing to parse")
+	}
+
 	// If already a map, return it
 	if m, ok := source.(map[string]any); ok {
 		return m, nil
 	}
 
+	// If it's an array, wrap it
+	if arr, ok := source.([]any); ok {
+		return map[string]any{"items": arr, "count": len(arr)}, nil
+	}
+
 	// Parse JSON string
 	str, ok := source.(string)
 	if !ok {
-		return nil, fmt.Errorf("source is not a string: %T", source)
+		return nil, fmt.Errorf("expected a JSON string or object, but got %T — check that the source expression points to the correct field", source)
 	}
 
-	var result map[string]any
-	if err := json.Unmarshal([]byte(str), &result); err != nil {
-		return nil, fmt.Errorf("invalid JSON: %w", err)
+	if str == "" {
+		return nil, fmt.Errorf("source is an empty string — nothing to parse")
 	}
 
-	return result, nil
+	// Try parsing as object first, then array
+	var obj map[string]any
+	if err := json.Unmarshal([]byte(str), &obj); err == nil {
+		return obj, nil
+	}
+
+	var arr []any
+	if err := json.Unmarshal([]byte(str), &arr); err == nil {
+		return map[string]any{"items": arr, "count": len(arr)}, nil
+	}
+
+	return nil, fmt.Errorf("failed to parse as JSON — make sure the source contains valid JSON")
 }

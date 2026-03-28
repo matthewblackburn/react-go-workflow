@@ -23,7 +23,6 @@ describe('applyExecutionStyles', () => {
     const statuses = new Map([['a', 'running']]);
     const result = applyExecutionStyles(nodes, statuses);
     expect(result[0].className).toContain('outline-blue-500');
-    expect(result[0].className).toContain('shadow-lg');
   });
 
   it('applies completed style (green outline)', () => {

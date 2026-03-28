@@ -112,7 +112,7 @@ export function ConfigPanel({
   const hasResult = !!stepResult;
 
   return (
-    <div className="flex h-full min-h-0 w-80 flex-col border-l bg-background">
+    <div className="flex h-full min-h-0 w-80 min-w-0 flex-col overflow-hidden border-l bg-background">
       <div className="flex items-center justify-between border-b px-4 py-3">
         <h3 className="font-semibold text-sm">{stepName}</h3>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
@@ -138,12 +138,12 @@ export function ConfigPanel({
             </TabsTrigger>
           </TabsList>
           <TabsContent value="results" className="mt-0 min-h-0 flex-1">
-            <ScrollArea className="h-full">
+            <ScrollArea className="h-full min-w-0">
               <ResultsTab result={stepResult!} />
             </ScrollArea>
           </TabsContent>
           <TabsContent value="configure" className="mt-0 min-h-0 flex-1">
-            <ScrollArea className="h-full">
+            <ScrollArea className="h-full min-w-0">
               <ConfigureContent
                 stepName={stepName}
                 stepType={stepType}
@@ -162,7 +162,7 @@ export function ConfigPanel({
           </TabsContent>
         </Tabs>
       ) : (
-        <ScrollArea className="min-h-0 flex-1">
+        <ScrollArea className="min-h-0 min-w-0 flex-1">
           <ConfigureContent
             stepName={stepName}
             stepType={stepType}
@@ -188,6 +188,8 @@ function detectValueType(val: string): string {
   if (val === 'true' || val === 'false') return 'boolean';
   if (/^\d{4}-\d{2}-\d{2}T/.test(val)) return 'datetime';
   if (val !== '' && !Number.isNaN(Number(val)) && !val.startsWith('{{')) return 'number';
+  if (val.startsWith('{')) return 'object';
+  if (val.startsWith('[')) return 'array';
   return 'string';
 }
 
@@ -206,19 +208,65 @@ function TypedValueInput({
 }) {
   const [valueType, setValueType] = useState(() => detectValueType(value));
 
+  const secretKeys = useContext(SecretKeysContext);
+  const variables = allStepNodes
+    .filter((s) => s.id !== currentNodeId && s.stepTypeName === 'set_variable' && s.outputSchema?.properties)
+    .flatMap((s) => {
+      const props = s.outputSchema?.properties as Record<string, any> | undefined;
+      if (!props) return [];
+      return Object.keys(props).map((varName) => ({ stepLabel: s.label, variableName: varName }));
+    });
+  const jsonBuilderMenuItems = useReferenceMenuItems({
+    allStepNodes,
+    currentNodeId,
+    workflowInputSchema,
+    secretKeys,
+    variables,
+  });
+
   const handleTypeChange = (newType: string) => {
     setValueType(newType);
     if (newType === 'boolean') onChange('false');
     else if (newType === 'number') onChange('0');
     else if (newType === 'datetime') onChange(new Date().toISOString());
+    else if (newType === 'object') onChange('{}');
+    else if (newType === 'array') onChange('[]');
     else onChange('');
   };
 
+  const parsedObj = valueType === 'object' ? (() => {
+    try { return JSON.parse(value) as Record<string, any>; } catch { return undefined; }
+  })() : undefined;
+
+  const isBlock = valueType === 'object' || valueType === 'array';
+
   return (
-    <div className="flex items-center gap-1.5">
+    <div className={isBlock ? 'space-y-1.5' : 'flex items-center gap-1.5'}>
       <TypeBadge type={valueType} types={VALUE_TYPES} onChange={handleTypeChange} />
 
-      {valueType === 'boolean' ? (
+      {valueType === 'object' ? (
+        <div className="rounded-md border p-3">
+          <JsonBuilder
+            value={parsedObj}
+            onChange={(v) => onChange(JSON.stringify(v ?? {}))}
+            rules={RULES_OUTPUT}
+            emit="values"
+            valueMenuItems={jsonBuilderMenuItems}
+          />
+        </div>
+      ) : valueType === 'array' ? (
+        <div className="rounded-md border p-3">
+          <StepReferenceInput
+            value={value}
+            onChange={onChange}
+            currentNodeId={currentNodeId}
+            allStepNodes={allStepNodes}
+            workflowInputSchema={workflowInputSchema}
+            placeholder="[1, 2, 3]"
+            multiline
+          />
+        </div>
+      ) : valueType === 'boolean' ? (
         <div className="flex flex-1 items-center gap-2">
           <Checkbox
             checked={value === 'true'}
@@ -236,17 +284,17 @@ function TypedValueInput({
             const val = e.target.value;
             onChange(val ? new Date(val).toISOString() : '');
           }}
-          className="h-8 flex-1 text-xs"
+          className="h-8 min-w-0 flex-1 text-xs"
         />
       ) : valueType === 'number' ? (
         <Input
           type="number"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-8 flex-1 text-xs"
+          className="h-8 min-w-0 flex-1 text-xs"
         />
       ) : (
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <StepReferenceInput
             value={value}
             onChange={onChange}
@@ -294,33 +342,33 @@ function KeyValueEditor({
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       {entries.map(([k, v], i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: order is stable
-        <div key={i} className="flex items-center gap-1.5">
-          <Input
-            value={k}
-            onChange={(e) => updateEntry(i, e.target.value, v)}
-            placeholder="Key"
-            className="h-7 flex-1 text-xs"
-          />
-          <div className="flex-1">
-            <StepReferenceInput
-              value={v}
-              onChange={(val) => updateEntry(i, k, val)}
-              currentNodeId={currentNodeId}
-              allStepNodes={allStepNodes}
-              workflowInputSchema={workflowInputSchema}
-              placeholder="Value"
+        <div key={i} className="space-y-1.5 rounded-md border bg-muted/20 p-2">
+          <div className="flex items-center gap-1.5">
+            <Input
+              value={k}
+              onChange={(e) => updateEntry(i, e.target.value, v)}
+              placeholder="Key"
+              className="h-7 min-w-0 flex-1 text-xs"
             />
+            <button
+              type="button"
+              onClick={() => removeEntry(i)}
+              className="shrink-0 p-1 text-muted-foreground hover:text-red-500"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => removeEntry(i)}
-            className="p-1 text-muted-foreground hover:text-red-500"
-          >
-            <Trash2 className="h-3 w-3" />
-          </button>
+          <StepReferenceInput
+            value={v}
+            onChange={(val) => updateEntry(i, k, val)}
+            currentNodeId={currentNodeId}
+            allStepNodes={allStepNodes}
+            workflowInputSchema={workflowInputSchema}
+            placeholder="Value"
+          />
         </div>
       ))}
       <button
@@ -478,7 +526,7 @@ function ConfigureContent({
   });
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="min-w-0 space-y-4 overflow-hidden p-4">
       <div className="space-y-2">
         <Label htmlFor="step-name">Step Name</Label>
         <Input
@@ -537,7 +585,9 @@ function ConfigureContent({
         </>
       )}
 
-      {Object.entries(properties).map(([key, fieldDef]) => {
+      {Object.entries(properties)
+        .sort(([, a], [, b]) => ((a as any).order ?? 99) - ((b as any).order ?? 99))
+        .map(([key, fieldDef]) => {
         const field = fieldDef as Record<string, any>;
         const title = (field.title as string) ?? key;
         const description = field.description as string | undefined;

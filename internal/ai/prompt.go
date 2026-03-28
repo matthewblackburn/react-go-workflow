@@ -94,7 +94,7 @@ Examples:
 4. Only use step types from the catalog above.
 5. Create a practical, working workflow that accomplishes the user's goal.
 6. Keep workflows simple — use the minimum number of steps needed.
-7. Expressions ONLY support the dot-path syntax documented above (steps.*, workflow.input.*, secrets.*, env.*). Do NOT use JavaScript, function calls, or any other syntax inside {{...}} — e.g. {{new Date()}} or {{Math.random()}} will NOT work. For computed values, use a step to produce the value and reference its output.
+7. Expressions ONLY support dot-path navigation into maps/objects. Do NOT use JavaScript, function calls, property accessors like .length, .toString(), or array indexing like [0]. Examples of INVALID expressions: {{new Date()}}, {{Math.random()}}, {{steps.x.output.items.length}}, {{steps.x.output.items[0]}}. To get an array count, use the filter step's output.count or a transform step.
 8. When the user's request needs an external API but doesn't specify one, use real free mock APIs instead of placeholder URLs. Good options:
    - https://jsonplaceholder.typicode.com/posts (list posts), /posts/1 (single post), /users, /todos
    - https://httpbin.org/get, /post, /status/200, /delay/1
