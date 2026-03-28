@@ -13,6 +13,7 @@ import {
   Loader2,
   Play,
   Save,
+  X,
 } from 'lucide-react';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -36,7 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import type { Workflow, WorkflowExecution } from '@/types/workflow';
@@ -529,7 +530,7 @@ function ExecutionDetail({ executionId }: { executionId: string }) {
   );
 }
 
-function InputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => void }) {
+export function InputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => void }) {
   const [schema, setSchema] = useState<Record<string, any> | undefined>(workflow.input_schema);
 
   useEffect(() => {
@@ -549,14 +550,12 @@ function InputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => vo
     <>
       <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-4 p-4">
-          <div>
-            <p className="text-muted-foreground text-xs">
-              Define the data this workflow expects when triggered. Access fields in steps via{' '}
-              <code className="rounded bg-muted px-1 py-0.5 text-[10px]">
-                {'{{workflow.input.fieldName}}'}
-              </code>
-            </p>
-          </div>
+          <p className="text-muted-foreground text-xs">
+            Define the fields this workflow expects when triggered. Reference them in steps using{' '}
+            <span className="inline-flex items-center gap-0.5 rounded bg-sky-500/15 px-1 py-0.5 font-medium text-[10px] text-sky-500">
+              @Workflow Input
+            </span>
+          </p>
           <JsonBuilder value={schema} onChange={setSchema} />
         </div>
       </ScrollArea>
@@ -574,7 +573,7 @@ function InputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => vo
   );
 }
 
-function OutputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => void }) {
+export function OutputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => void }) {
   const [outputSchema, setOutputSchema] = useState<Record<string, any> | undefined>(
     workflow.output_schema,
   );
@@ -617,12 +616,11 @@ function OutputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => v
       <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-4 p-4">
           <p className="text-muted-foreground text-xs">
-            Define the output this workflow produces. Set each field's value to a step expression
-            like{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-[10px]">
-              {'{{steps.StepName.output.field}}'}
-            </code>
-            . When triggered via a synchronous webhook, this is returned in the response.
+            Define the output this workflow produces. Set each field's value using{' '}
+            <span className="inline-flex items-center gap-0.5 rounded bg-violet-500/15 px-1 py-0.5 font-medium text-[10px] text-violet-500">
+              @Step
+            </span>{' '}
+            references. When triggered via a synchronous webhook, this is returned in the response.
           </p>
           <JsonBuilder
             value={outputSchema}
@@ -868,22 +866,19 @@ export function WorkflowSettingsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex w-[400px] flex-col gap-0 p-0 sm:w-[440px]">
-        <SheetHeader className="border-b px-6 py-4">
-          <SheetTitle>Workflow Settings</SheetTitle>
-        </SheetHeader>
+      <SheetContent className="flex w-[400px] flex-col gap-0 p-0 sm:w-[440px]" showCloseButton={false}>
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <h3 className="font-semibold text-sm">Workflow Settings</h3>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onOpenChange(false)}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
 
         {workflow ? (
           <Tabs defaultValue="general" className="flex min-h-0 flex-1 flex-col gap-0">
             <TabsList className="w-full rounded-none border-b bg-transparent px-4">
               <TabsTrigger value="general" className="flex-1 text-xs">
                 General
-              </TabsTrigger>
-              <TabsTrigger value="input" className="flex-1 text-xs">
-                Input
-              </TabsTrigger>
-              <TabsTrigger value="output" className="flex-1 text-xs">
-                Output
               </TabsTrigger>
               <TabsTrigger value="triggers" className="flex-1 text-xs">
                 Triggers
@@ -897,12 +892,6 @@ export function WorkflowSettingsSheet({
             </TabsList>
             <TabsContent value="general" className="mt-0 flex min-h-0 flex-1 flex-col">
               <GeneralTab workflow={workflow} onSaved={handleSaved} />
-            </TabsContent>
-            <TabsContent value="input" className="mt-0 flex min-h-0 flex-1 flex-col">
-              <InputTab workflow={workflow} onSaved={handleSaved} />
-            </TabsContent>
-            <TabsContent value="output" className="mt-0 flex min-h-0 flex-1 flex-col">
-              <OutputTab workflow={workflow} onSaved={handleSaved} />
             </TabsContent>
             <TabsContent value="triggers" className="mt-0 flex min-h-0 flex-1 flex-col">
               <TriggersTab workflow={workflow} onSaved={handleSaved} />
