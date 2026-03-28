@@ -9,6 +9,7 @@ import {
   Moon,
   Send,
   Sun,
+  Users,
   Workflow,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -25,6 +26,7 @@ const navItems = [
   { to: '/crons', label: 'Crons', icon: Clock },
   { to: '/testing/webhooks', label: 'Webhook Test', icon: Send },
   { to: '/secrets', label: 'Secrets', icon: KeyRound },
+  { to: '/users', label: 'Users', icon: Users },
 ];
 
 const severityColors: Record<string, string> = {

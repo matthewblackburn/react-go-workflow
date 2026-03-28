@@ -14,6 +14,7 @@ const CronList = React.lazy(() => import('@/features/workflows/pages/CronList'))
 const ExecutionList = React.lazy(() => import('@/features/workflows/pages/ExecutionList'));
 const ExecutionView = React.lazy(() => import('@/features/workflows/pages/ExecutionView'));
 const WebhookTest = React.lazy(() => import('@/features/workflows/pages/WebhookTest'));
+const UserList = React.lazy(() => import('@/features/users/pages/UserList'));
 const SecretList = React.lazy(() => import('@/features/secrets/pages/SecretList'));
 const SecretView = React.lazy(() => import('@/features/secrets/pages/SecretView'));
 const SecretEdit = React.lazy(() => import('@/features/secrets/pages/SecretEdit'));
@@ -43,7 +44,8 @@ export const Router = () => {
                 <Route path="/executions" element={<ExecutionList />} />
                 <Route path="/executions/:id" element={<ExecutionView />} />
                 <Route path="/testing/webhooks" element={<WebhookTest />} />
-                <Route path="/secrets" element={<SecretList />} />
+                <Route path="/users" element={<UserList />} />
+              <Route path="/secrets" element={<SecretList />} />
                 <Route path="/secrets/:id" element={<SecretView />} />
                 <Route path="/secrets/:id/edit" element={<SecretEdit />} />
               </Route>

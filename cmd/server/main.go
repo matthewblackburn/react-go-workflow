@@ -117,6 +117,7 @@ func run() error {
 	notificationHandler := notification.NewHandler(client)
 	databaseHandler := database.NewHandler(rawDB)
 	aiHandler := ai.NewHandler(client, anthropicKey)
+	userHandler := auth.NewUserHandler()
 
 	// Router
 	r := chi.NewRouter()
@@ -204,6 +205,14 @@ func run() error {
 
 		// Database
 		r.Get("/v1/database/tables", databaseHandler.ListTables)
+
+		// Users
+		r.Route("/v1/users", func(r chi.Router) {
+			r.Get("/", userHandler.List)
+			r.Get("/count", userHandler.Count)
+			r.Delete("/{id}", userHandler.Delete)
+			r.Patch("/{id}/password", userHandler.UpdatePassword)
+		})
 
 		// Dashboard
 		r.Get("/bff/dashboard", workflowHandler.Dashboard)
