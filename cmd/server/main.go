@@ -14,10 +14,10 @@ import (
 	"react-go-workflow/ent"
 	_ "react-go-workflow/ent/runtime"
 	"react-go-workflow/internal/ai"
+	"react-go-workflow/internal/auth"
 	"react-go-workflow/internal/engine"
 	"react-go-workflow/internal/engine/runners"
 	"react-go-workflow/internal/execution"
-	"react-go-workflow/internal/middleware"
 	"react-go-workflow/internal/notification"
 	"react-go-workflow/internal/secret"
 	"react-go-workflow/internal/steptype"
@@ -29,7 +29,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/supertokens/supertokens-golang/supertokens"
 	_ "github.com/lib/pq"
 )
 
@@ -47,7 +47,9 @@ func run() error {
 	// Configuration from environment
 	port := envOr("PORT", "8080")
 	dbURL := envOr("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/workflow?sslmode=disable")
-	jwtSecret := envOr("JWT_SECRET", "dev-secret-change-me")
+	supertokensURL := envOr("SUPERTOKENS_URL", "http://localhost:3567")
+	apiDomain := envOr("API_DOMAIN", "http://localhost:8080")
+	websiteDomain := envOr("WEBSITE_DOMAIN", "http://localhost:3000")
 	encKeyRaw := envOr("SECRET_ENCRYPTION_KEY", "dev-encryption-key-change-me")
 	encKey := secret.DeriveKey(encKeyRaw)
 	anthropicKey := envOr("ANTHROPIC_API_KEY", "")
@@ -86,10 +88,11 @@ func run() error {
 		return fmt.Errorf("seed example workflow: %w", err)
 	}
 
-	// JWT config
-	jwtCfg := middleware.JWTConfig{
-		Secret: jwtSecret,
+	// Supertokens auth
+	if err := auth.Init(supertokensURL, apiDomain, websiteDomain); err != nil {
+		return fmt.Errorf("init supertokens: %w", err)
 	}
+	slog.Info("supertokens initialized", "url", supertokensURL)
 
 	// Execution engine
 	registry := engine.NewRunnerRegistry()
@@ -124,13 +127,17 @@ func run() error {
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:8080", "http://localhost:3000"},
+		AllowedOrigins:   []string{websiteDomain},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type", "Accept", "If-Match", "If-None-Match"},
+		AllowedHeaders: append([]string{"Content-Type", "Accept", "If-Match", "If-None-Match"},
+			supertokens.GetAllCORSHeaders()...),
 		ExposedHeaders:   []string{"ETag"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+
+	// Supertokens middleware — handles /auth/* routes automatically
+	r.Use(supertokens.Middleware)
 
 	// Health check (unauthenticated)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -139,28 +146,12 @@ func run() error {
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	// Dev token endpoint (for development only)
-	r.Post("/v1/dev/token", func(w http.ResponseWriter, r *http.Request) {
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"sub":   1,
-			"roles": []string{"admin"},
-			"exp":   time.Now().Add(24 * time.Hour).Unix(),
-		})
-		signed, err := token.SignedString([]byte(jwtSecret))
-		if err != nil {
-			http.Error(w, "failed to sign token", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"token":"` + signed + `"}`))
-	})
-
 	// Step Types — read is public, write requires auth
 	r.Route("/v1/step-types", func(r chi.Router) {
 		r.Get("/", stepTypeHandler.List)
 		r.Get("/{id}", stepTypeHandler.Get)
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.RequireAuth(jwtCfg))
+			r.Use(auth.RequireSession())
 			r.Post("/", stepTypeHandler.Create)
 			r.Patch("/{id}", stepTypeHandler.Update)
 			r.Delete("/{id}", stepTypeHandler.Delete)
@@ -169,7 +160,7 @@ func run() error {
 
 	// Authenticated routes
 	r.Group(func(r chi.Router) {
-		r.Use(middleware.RequireAuth(jwtCfg))
+		r.Use(auth.RequireSession())
 		r.Use(chimw.Timeout(30 * time.Second))
 
 		// Workflows

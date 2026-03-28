@@ -47,6 +47,7 @@
     "react-joyride": "^3.0.0",
     "react-router-dom": "^7.13.2",
     "sonner": "^2.0.7",
+    "supertokens-web-js": "^0.16.0",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {

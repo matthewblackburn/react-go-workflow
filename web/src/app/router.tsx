@@ -1,9 +1,12 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useAuth } from '@/lib/auth/auth-context';
 
 const Login = React.lazy(() => import('@/features/auth/pages/Login'));
+const Register = React.lazy(() => import('@/features/auth/pages/Register'));
+const ForgotPassword = React.lazy(() => import('@/features/auth/pages/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('@/features/auth/pages/ResetPassword'));
 const Dashboard = React.lazy(() => import('@/features/dashboard/pages/Dashboard'));
 const WorkflowList = React.lazy(() => import('@/features/workflows/pages/WorkflowList'));
 const WorkflowBuilder = React.lazy(() => import('@/features/workflows/pages/WorkflowBuilder'));
@@ -22,27 +25,38 @@ const Loading = () => (
 );
 
 export const Router = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) return <Loading />;
 
   return (
     <BrowserRouter>
       <Suspense fallback={<Loading />}>
         <Routes>
           {isAuthenticated ? (
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/workflows" element={<WorkflowList />} />
-              <Route path="/workflows/:id" element={<WorkflowBuilder />} />
-              <Route path="/crons" element={<CronList />} />
-              <Route path="/executions" element={<ExecutionList />} />
-              <Route path="/executions/:id" element={<ExecutionView />} />
-              <Route path="/testing/webhooks" element={<WebhookTest />} />
-              <Route path="/secrets" element={<SecretList />} />
-              <Route path="/secrets/:id" element={<SecretView />} />
-              <Route path="/secrets/:id/edit" element={<SecretEdit />} />
-            </Route>
+            <>
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/workflows" element={<WorkflowList />} />
+                <Route path="/workflows/:id" element={<WorkflowBuilder />} />
+                <Route path="/crons" element={<CronList />} />
+                <Route path="/executions" element={<ExecutionList />} />
+                <Route path="/executions/:id" element={<ExecutionView />} />
+                <Route path="/testing/webhooks" element={<WebhookTest />} />
+                <Route path="/secrets" element={<SecretList />} />
+                <Route path="/secrets/:id" element={<SecretView />} />
+                <Route path="/secrets/:id/edit" element={<SecretEdit />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </>
           ) : (
-            <Route path="*" element={<Login />} />
+            <>
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/auth/reset-password" element={<ResetPassword />} />
+              <Route path="*" element={<Login />} />
+            </>
           )}
         </Routes>
       </Suspense>

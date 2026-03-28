@@ -149,7 +149,7 @@ function NotificationBell() {
 export const AppLayout = () => {
   const location = useLocation();
   const { theme, setTheme } = useTheme();
-  const { clearToken } = useAuth();
+  const { signOut } = useAuth();
 
   return (
     <div className="flex h-full flex-col">
@@ -192,7 +192,7 @@ export const AppLayout = () => {
           </button>
           <button
             type="button"
-            onClick={clearToken}
+            onClick={signOut}
             className="rounded-md p-2 text-muted-foreground hover:text-foreground"
             title="Sign out"
           >

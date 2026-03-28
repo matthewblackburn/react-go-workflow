@@ -50,8 +50,8 @@ func TestRequireAuth_ValidToken(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("status = %d, want %d", w.Code, http.StatusOK)
 	}
-	if calledWith.UserID != 42 {
-		t.Errorf("UserID = %d, want 42", calledWith.UserID)
+	if calledWith.UserID != "42" {
+		t.Errorf("UserID = %s, want 42", calledWith.UserID)
 	}
 	if len(calledWith.Roles) != 2 || calledWith.Roles[0] != "admin" {
 		t.Errorf("Roles = %v, want [admin editor]", calledWith.Roles)

@@ -14,10 +14,6 @@ export class ApiError extends Error {
   }
 }
 
-function getToken(): string | null {
-  return localStorage.getItem('jwt_token');
-}
-
 function buildQuery(params?: Record<string, string | number | boolean | undefined>): string {
   if (!params) return '';
   const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== '');
@@ -27,13 +23,12 @@ function buildQuery(params?: Record<string, string | number | boolean | undefine
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {};
-  const token = getToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
 
   if (body) {
     headers['Content-Type'] = 'application/json';
   }
 
+  // Supertokens SDK auto-attaches session tokens via fetch interceptor
   const res = await fetch(path, {
     method,
     headers,

@@ -16,6 +16,41 @@ services:
       retries: 10
       start_period: 10s
 
+  supertokens-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: supertokens
+      POSTGRES_PASSWORD: supertokens
+      POSTGRES_DB: supertokens
+    volumes:
+      - supertokens-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U supertokens"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  supertokens:
+    image: registry.supertokens.io/supertokens/supertokens-postgresql
+    ports:
+      - "3567:3567"
+    environment:
+      POSTGRESQL_USER: supertokens
+      POSTGRESQL_PASSWORD: supertokens
+      POSTGRESQL_HOST: supertokens-db
+      POSTGRESQL_PORT: "5432"
+      POSTGRESQL_DATABASE_NAME: supertokens
+    depends_on:
+      supertokens-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3567/hello"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+
   api:
     build:
       context: .
@@ -25,13 +60,15 @@ services:
     environment:
       PORT: "8080"
       DATABASE_URL: "postgres://postgres:postgres@db:5432/workflow?sslmode=disable"
-      JWT_SECRET: "dev-secret-change-me"
+      SUPERTOKENS_URL: "http://supertokens:3567"
       ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
     volumes:
       - .:/app
       - go-mod-cache:/go/pkg/mod
     depends_on:
       db:
+        condition: service_healthy
+      supertokens:
         condition: service_healthy
 
   web:
@@ -58,5 +95,6 @@ services:
 
 volumes:
   pgdata:
+  supertokens-pgdata:
   go-mod-cache:
   pnpm-store:

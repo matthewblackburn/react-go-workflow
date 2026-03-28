@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -12,11 +13,16 @@ import (
 
 type contextKey string
 
-const authContextKey contextKey = "auth_context"
+const authCtxKey contextKey = "auth_context"
+
+// AuthContextKey returns the context key for AuthContext (used by auth package).
+func AuthContextKey() contextKey {
+	return authCtxKey
+}
 
 // AuthContext holds the authenticated user's identity and permissions.
 type AuthContext struct {
-	UserID int
+	UserID string
 	Roles  []string
 }
 
@@ -32,7 +38,7 @@ func (a AuthContext) HasPermission(permission string) bool {
 
 // AuthFromContext retrieves the AuthContext from the request context.
 func AuthFromContext(ctx context.Context) AuthContext {
-	if auth, ok := ctx.Value(authContextKey).(AuthContext); ok {
+	if auth, ok := ctx.Value(authCtxKey).(AuthContext); ok {
 		return auth
 	}
 	return AuthContext{}
@@ -76,7 +82,7 @@ func RequireAuth(cfg JWTConfig) func(http.Handler) http.Handler {
 				return
 			}
 
-			userID, ok := getIntClaim(claims, "sub")
+			userID, ok := getStringClaim(claims, "sub")
 			if !ok {
 				shared.WriteJSON(w, http.StatusUnauthorized, shared.ErrUnauthorized)
 				return
@@ -89,7 +95,7 @@ func RequireAuth(cfg JWTConfig) func(http.Handler) http.Handler {
 				Roles:  roles,
 			}
 
-			ctx := context.WithValue(r.Context(), authContextKey, authCtx)
+			ctx := context.WithValue(r.Context(), authCtxKey, authCtx)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -109,20 +115,18 @@ func RequirePermission(permission string) func(http.Handler) http.Handler {
 	}
 }
 
-func getIntClaim(claims jwt.MapClaims, key string) (int, bool) {
+func getStringClaim(claims jwt.MapClaims, key string) (string, bool) {
 	val, ok := claims[key]
 	if !ok {
-		return 0, false
+		return "", false
 	}
 	switch v := val.(type) {
-	case float64:
-		return int(v), true
-	case int:
+	case string:
 		return v, true
-	case int64:
-		return int(v), true
+	case float64:
+		return fmt.Sprintf("%d", int(v)), true
 	default:
-		return 0, false
+		return fmt.Sprintf("%v", v), true
 	}
 }
 

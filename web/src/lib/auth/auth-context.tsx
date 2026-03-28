@@ -1,63 +1,36 @@
-import type { QueryClient } from '@tanstack/react-query';
-import { createContext, type ReactNode, useCallback, useContext, useState } from 'react';
-
-interface DecodedToken {
-  sub: number;
-  roles: string[];
-  exp: number;
-}
-
-function decodeToken(token: string): DecodedToken | null {
-  try {
-    const payload = token.split('.')[1];
-    return JSON.parse(atob(payload));
-  } catch {
-    return null;
-  }
-}
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import Session from 'supertokens-web-js/recipe/session';
 
 interface AuthContextValue {
-  token: string | null;
-  claims: DecodedToken | null;
-  setToken: (token: string) => void;
-  clearToken: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  signOut: () => Promise<void>;
+  checkSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({
-  children,
-  queryClient,
-}: {
-  children: ReactNode;
-  queryClient: QueryClient;
-}) {
-  const [token, setTokenState] = useState<string | null>(() => localStorage.getItem('jwt_token'));
-  const [claims, setClaims] = useState<DecodedToken | null>(() => {
-    const t = localStorage.getItem('jwt_token');
-    return t ? decodeToken(t) : null;
-  });
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const setToken = useCallback(
-    (t: string) => {
-      localStorage.setItem('jwt_token', t);
-      setTokenState(t);
-      setClaims(decodeToken(t));
-      queryClient.invalidateQueries();
-    },
-    [queryClient],
-  );
+  const checkSession = useCallback(async () => {
+    const exists = await Session.doesSessionExist();
+    setIsAuthenticated(exists);
+    setIsLoading(false);
+  }, []);
 
-  const clearToken = useCallback(() => {
-    localStorage.removeItem('jwt_token');
-    setTokenState(null);
-    setClaims(null);
-    queryClient.invalidateQueries();
-  }, [queryClient]);
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
+
+  const signOut = useCallback(async () => {
+    await Session.signOut();
+    setIsAuthenticated(false);
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ token, claims, setToken, clearToken, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, signOut, checkSession }}>
       {children}
     </AuthContext.Provider>
   );

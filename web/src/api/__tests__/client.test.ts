@@ -21,20 +21,7 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 describe('api client', () => {
-  it('adds Authorization header when JWT token exists in localStorage', async () => {
-    localStorage.setItem('jwt_token', 'my-token');
-    mockFetch.mockReturnValue(jsonResponse({ id: 1 }));
-
-    await api.get('/api/test');
-
-    expect(mockFetch).toHaveBeenCalledWith('/api/test', {
-      method: 'GET',
-      headers: { Authorization: 'Bearer my-token' },
-      body: undefined,
-    });
-  });
-
-  it('does not add Authorization header when no token', async () => {
+  it('makes GET request without manual auth header (Supertokens handles auth)', async () => {
     mockFetch.mockReturnValue(jsonResponse({ id: 1 }));
 
     await api.get('/api/test');
