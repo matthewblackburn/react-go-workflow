@@ -34,9 +34,6 @@ var builtinTypes = []seedType{
 				"headers": M{"type": "object", "title": "Headers", "description": "Key-value pairs to send as request headers",
 					"additionalProperties": M{"type": "string"}},
 				"body":      M{"type": "string", "title": "Body", "description": "Request body (for POST/PUT/PATCH)", "format": "json"},
-				"auth_type": M{"type": "string", "title": "Authentication", "enum": []string{"none", "bearer", "basic"}, "default": "none"},
-				"auth_value": M{"type": "string", "title": "Auth Value", "description": "Bearer token or base64-encoded credentials",
-					"dependsOn": M{"field": "auth_type", "notEqual": "none"}},
 			},
 			"required": []string{"url", "method"},
 		},
@@ -188,7 +185,7 @@ var builtinTypes = []seedType{
 			},
 			"required": []string{"source"},
 		},
-		OutputSchema: M{"type": "object", "description": "The parsed JSON data"},
+		OutputSchema: M{"type": "object", "description": "The parsed JSON data", "dynamicOutput": true},
 	},
 	{
 		Name: "filter", DisplayName: "Filter List", Category: entsteptype.CategoryLogic,

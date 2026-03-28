@@ -123,7 +123,6 @@ func run() error {
 	r.Use(chimw.RealIP)
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
-	r.Use(chimw.Timeout(30 * time.Second))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:8080", "http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -171,6 +170,7 @@ func run() error {
 	// Authenticated routes
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireAuth(jwtCfg))
+		r.Use(chimw.Timeout(30 * time.Second))
 
 		// Workflows
 		r.Route("/v1/workflows", func(r chi.Router) {

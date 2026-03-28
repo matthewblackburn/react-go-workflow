@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"regexp"
 
 	"react-go-workflow/ent"
 	"react-go-workflow/internal/shared"
@@ -113,9 +114,10 @@ type responseStep struct {
 }
 
 type generateResponse struct {
-	Steps       []responseStep  `json:"steps"`
-	Edges       []generatedEdge `json:"edges"`
-	Summary     string          `json:"summary"`
+	Steps          []responseStep  `json:"steps"`
+	Edges          []generatedEdge `json:"edges"`
+	Summary        string          `json:"summary"`
+	MissingSecrets []string        `json:"missing_secrets,omitempty"`
 	InputSchema map[string]any  `json:"input_schema,omitempty"`
 }
 
@@ -188,7 +190,11 @@ func (h *Handler) GenerateWorkflow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate and enrich
-	resp, err := h.enrichResult(toolResult)
+	existingSecrets := make(map[string]bool, len(secretKeys))
+	for _, k := range secretKeys {
+		existingSecrets[k] = true
+	}
+	resp, err := h.enrichResult(toolResult, existingSecrets)
 	if err != nil {
 		shared.WriteError(w, err)
 		return
@@ -243,7 +249,7 @@ func (h *Handler) DiagnoseExecution(w http.ResponseWriter, r *http.Request) {
 }
 
 // enrichResult validates the AI output, assigns UUIDs, and resolves step type IDs.
-func (h *Handler) enrichResult(result aiToolResult) (*generateResponse, error) {
+func (h *Handler) enrichResult(result aiToolResult, existingSecrets map[string]bool) (*generateResponse, error) {
 	if len(result.Steps) == 0 {
 		return nil, ErrAIInvalidResult.WithDetails(map[string]string{
 			"steps": "no steps were generated",
@@ -293,10 +299,41 @@ func (h *Handler) enrichResult(result aiToolResult) (*generateResponse, error) {
 		return nil, ErrAIInvalidResult.WithDetails(invalidEdges)
 	}
 
+	// Scan all step configs for {{secrets.X}} references and find missing ones
+	secretRefRegex := regexp.MustCompile(`\{\{secrets\.([^}]+)\}\}`)
+	missingSet := make(map[string]bool)
+	for _, step := range result.Steps {
+		scanForSecrets(step.Config, secretRefRegex, existingSecrets, missingSet)
+	}
+	var missingSecrets []string
+	for k := range missingSet {
+		missingSecrets = append(missingSecrets, k)
+	}
+
 	return &generateResponse{
-		Steps:       responseSteps,
-		Edges:       result.Edges,
-		Summary:     result.Summary,
-		InputSchema: result.InputSchema,
+		Steps:          responseSteps,
+		Edges:          result.Edges,
+		Summary:        result.Summary,
+		InputSchema:    result.InputSchema,
+		MissingSecrets: missingSecrets,
 	}, nil
+}
+
+func scanForSecrets(v any, re *regexp.Regexp, existing map[string]bool, missing map[string]bool) {
+	switch val := v.(type) {
+	case string:
+		for _, match := range re.FindAllStringSubmatch(val, -1) {
+			if len(match) > 1 && !existing[match[1]] {
+				missing[match[1]] = true
+			}
+		}
+	case map[string]any:
+		for _, child := range val {
+			scanForSecrets(child, re, existing, missing)
+		}
+	case []any:
+		for _, item := range val {
+			scanForSecrets(item, re, existing, missing)
+		}
+	}
 }

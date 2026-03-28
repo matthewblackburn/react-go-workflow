@@ -110,6 +110,22 @@ function DragPreview({ stepType }: { stepType: StepType }) {
   );
 }
 
+/** Derive a JSON-Schema-like object from an actual runtime value, for autocomplete. */
+function schemaFromValue(value: unknown): Record<string, any> {
+  if (value === null || value === undefined) return { type: 'object' };
+  if (Array.isArray(value)) {
+    return { type: 'array', items: value.length > 0 ? schemaFromValue(value[0]) : {} };
+  }
+  if (typeof value === 'object') {
+    const properties: Record<string, any> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      properties[k] = schemaFromValue(v);
+    }
+    return { type: 'object', properties };
+  }
+  return { type: typeof value };
+}
+
 function makeStepNode(id: string, position: { x: number; y: number }, data: StepNodeData): Node {
   return {
     id,
@@ -372,20 +388,36 @@ function WorkflowBuilderInner() {
     }
   }, [computedEdges, nodes, setNodes, fitView]);
 
-  // Step nodes list for config panel / step pickers
+  // Step nodes list for config panel / step pickers.
+  // For steps with dynamicFields (e.g. json_parse), build output schema from
+  // user-defined output_fields in the step config.
+  // Falls back to runtime output if available, then static schema.
   const allStepNodes = useMemo(() => {
     return nodes
       .filter((n) => n.type === 'stepNode')
       .map((n) => {
         const d = n.data as unknown as StepNodeData;
+        let outputSchema = d.stepType?.output_schema;
+
+        // Use user-defined output schema from config (e.g. json_parse)
+        if (outputSchema?.dynamicOutput && d.config?._outputSchema) {
+          outputSchema = d.config._outputSchema as Record<string, any>;
+        }
+
+        // Override with runtime output shape if available
+        const result = stepResults.get(n.id);
+        if (result?.output && typeof result.output === 'object') {
+          outputSchema = schemaFromValue(result.output);
+        }
+
         return {
           id: n.id,
           label: d.label,
           isCondition: ((d.stepType?.config_schema?.outputs as any[])?.length ?? 0) > 1,
-          outputSchema: d.stepType?.output_schema,
+          outputSchema,
         };
       });
-  }, [nodes]);
+  }, [nodes, stepResults]);
 
   // Step info for AI diagnosis
   const stepInfoMap = useMemo(() => {

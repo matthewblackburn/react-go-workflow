@@ -282,7 +282,8 @@ func (e *Executor) executeDAG(ctx context.Context, wf *ent.Workflow, exec *ent.W
 
 	// Track results
 	stepOutputs := make(map[uuid.UUID]map[string]any)
-	done := make(map[uuid.UUID]bool) // completed or failed
+	done := make(map[uuid.UUID]bool)    // completed, failed, or skipped
+	skipped := make(map[uuid.UUID]bool) // specifically skipped (non-taken branches)
 	var executionErr error
 
 	// Wave-based execution: process steps in rounds until no more are ready
@@ -299,6 +300,25 @@ func (e *Executor) executeDAG(ctx context.Context, wf *ent.Workflow, exec *ent.W
 		}
 
 		if len(wave) == 0 {
+			// Log any steps still pending (stuck) for debugging
+			for _, s := range wf.Edges.Steps {
+				if !done[s.ID] {
+					deps := normalDeps[s.ID]
+					depNames := make([]string, 0, len(deps))
+					for _, d := range deps {
+						name := d.String()
+						if ds := stepsByID[d]; ds != nil {
+							name = ds.Name
+						}
+						doneSuffix := ""
+						if done[d] {
+							doneSuffix = " (done)"
+						}
+						depNames = append(depNames, name+doneSuffix)
+					}
+					slog.Warn("step stuck pending", "step", s.Name, "step_id", s.ID, "in_degree", inDegree[s.ID], "deps", depNames)
+				}
+			}
 			break // No more steps to run
 		}
 
@@ -363,6 +383,8 @@ func (e *Executor) executeDAG(ctx context.Context, wf *ent.Workflow, exec *ent.W
 							condResult = "true"
 						}
 						if edge.SourceOutput != condResult {
+							// Decrement in-degree for non-taken branch; skip if no other path leads here
+							e.skipBranch(ctx, edge.TargetStepID, executionID, stepExecs, stepsByID, done, inDegree, normalEdges, skipped)
 							continue
 						}
 					}
@@ -598,6 +620,56 @@ func (e *Executor) failStep(ctx context.Context, stepExec *ent.StepExecution, ex
 	})
 
 	return StepResult{Error: err}
+}
+
+// skipBranch decrements the in-degree for a step on a non-taken condition branch.
+// If the step's in-degree reaches 0 and all its sources are skipped/done, it gets skipped.
+// This avoids skipping steps that merge multiple branches (e.g. a step after both true/false paths).
+func (e *Executor) skipBranch(ctx context.Context, stepID uuid.UUID, executionID uuid.UUID, stepExecs map[uuid.UUID]*ent.StepExecution, stepsByID map[uuid.UUID]*ent.Step, done map[uuid.UUID]bool, inDegree map[uuid.UUID]int, normalEdges map[uuid.UUID][]*ent.Edge, skipped map[uuid.UUID]bool) {
+	if done[stepID] || skipped[stepID] {
+		return
+	}
+
+	// Decrement in-degree for this non-taken edge
+	inDegree[stepID]--
+
+	// Only skip if in-degree is 0 and it wasn't scheduled to run
+	// (all paths leading to it were skipped)
+	if inDegree[stepID] > 0 {
+		return
+	}
+
+	// Mark as skipped
+	skipped[stepID] = true
+	done[stepID] = true
+
+	now := time.Now()
+	s := stepsByID[stepID]
+	stepName := ""
+	if s != nil {
+		stepName = s.Name
+	}
+
+	if se := stepExecs[stepID]; se != nil {
+		e.client.StepExecution.UpdateOneID(se.ID).
+			SetStatus(entstepexec.StatusSkipped).
+			SetCompletedAt(now).
+			Exec(ctx)
+	}
+
+	e.eventBus.Publish(executionID, Event{
+		Type:        EventStepStatus,
+		StepID:      &stepID,
+		StepName:    stepName,
+		Status:      "skipped",
+		Timestamp:   now,
+		CompletedAt: &now,
+	})
+
+	// Propagate skip to downstream steps
+	for _, edge := range normalEdges[stepID] {
+		e.skipBranch(ctx, edge.TargetStepID, executionID, stepExecs, stepsByID, done, inDegree, normalEdges, skipped)
+	}
 }
 
 func (e *Executor) retryDelay(s *ent.Step, attempt int) time.Duration {

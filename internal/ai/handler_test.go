@@ -111,7 +111,7 @@ func TestEnrichResult_ValidResult(t *testing.T) {
 		Summary: "Fetches data and saves to database",
 	}
 
-	resp, err := h.enrichResult(result)
+	resp, err := h.enrichResult(result, map[string]bool{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -151,7 +151,7 @@ func TestEnrichResult_UnknownStepType(t *testing.T) {
 		Summary: "Bad workflow",
 	}
 
-	_, err := h.enrichResult(result)
+	_, err := h.enrichResult(result, map[string]bool{})
 	if err == nil {
 		t.Fatal("expected error for unknown step type")
 	}
@@ -170,7 +170,7 @@ func TestEnrichResult_BadEdgeReference(t *testing.T) {
 		Summary: "Bad edges",
 	}
 
-	_, err := h.enrichResult(result)
+	_, err := h.enrichResult(result, map[string]bool{})
 	if err == nil {
 		t.Fatal("expected error for bad edge reference")
 	}
@@ -185,7 +185,7 @@ func TestEnrichResult_EmptySteps(t *testing.T) {
 		Summary: "Empty",
 	}
 
-	_, err := h.enrichResult(result)
+	_, err := h.enrichResult(result, map[string]bool{})
 	if err == nil {
 		t.Fatal("expected error for empty steps")
 	}

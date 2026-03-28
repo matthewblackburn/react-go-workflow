@@ -41,6 +41,7 @@ const statusIcons: Record<string, React.ReactNode> = {
   running: <Play className="h-3.5 w-3.5 fill-blue-500 text-blue-500" />,
   completed: <CircleCheck className="h-3.5 w-3.5 text-green-500" />,
   failed: <CircleX className="h-3.5 w-3.5 text-red-500" />,
+  skipped: <Circle className="h-3.5 w-3.5 text-muted-foreground/50" />,
   pending: <Circle className="h-3.5 w-3.5 text-muted-foreground" />,
 };
 

@@ -5,6 +5,7 @@ const statusStyles: Record<string, string> = {
     'outline outline-2 outline-offset-2 outline-blue-500 shadow-blue-200 shadow-lg rounded-lg',
   completed: 'outline outline-2 outline-offset-2 outline-green-500 rounded-lg',
   failed: 'outline outline-2 outline-offset-2 outline-red-500 rounded-lg',
+  skipped: 'opacity-40 rounded-lg',
   pending: '',
 };
 

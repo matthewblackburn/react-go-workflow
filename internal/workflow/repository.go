@@ -6,9 +6,13 @@ import (
 	"react-go-workflow/ent"
 	"react-go-workflow/ent/canvasnote"
 	"react-go-workflow/ent/edge"
+	"react-go-workflow/ent/notification"
+	"react-go-workflow/ent/notificationsetting"
 	"react-go-workflow/ent/step"
 	"react-go-workflow/ent/stepexecution"
 	entworkflow "react-go-workflow/ent/workflow"
+	"react-go-workflow/ent/workflowexecution"
+	"react-go-workflow/ent/workflowversion"
 
 	"github.com/google/uuid"
 )
@@ -115,32 +119,65 @@ func (r *Repository) Update(ctx context.Context, id uuid.UUID, wf *ent.Workflow)
 }
 
 func (r *Repository) Delete(ctx context.Context, id uuid.UUID) error {
-	// Delete edges, steps, canvas notes, then workflow (cascade)
+	// Delete all related records then the workflow itself.
+	// Order matters: delete children before parents to satisfy FK constraints.
 	tx, err := r.client.Tx(ctx)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Edge.Delete().Where(edge.WorkflowID(id)).Exec(ctx)
-	if err != nil {
+	// Notifications (references workflow_execution_id and workflow_id)
+	if _, err := tx.Notification.Delete().Where(notification.WorkflowID(id)).Exec(ctx); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
 
-	_, err = tx.Step.Delete().Where(step.WorkflowID(id)).Exec(ctx)
-	if err != nil {
+	// Step executions (references step_id via steps that belong to this workflow)
+	if _, err := tx.StepExecution.Delete().Where(
+		stepexecution.HasStepWith(step.WorkflowID(id)),
+	).Exec(ctx); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
 
-	_, err = tx.CanvasNote.Delete().Where(canvasnote.WorkflowID(id)).Exec(ctx)
-	if err != nil {
+	// Workflow executions
+	if _, err := tx.WorkflowExecution.Delete().Where(workflowexecution.WorkflowID(id)).Exec(ctx); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
 
-	err = tx.Workflow.DeleteOneID(id).Exec(ctx)
-	if err != nil {
+	// Notification settings
+	if _, err := tx.NotificationSetting.Delete().Where(notificationsetting.WorkflowID(id)).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	// Workflow versions
+	if _, err := tx.WorkflowVersion.Delete().Where(workflowversion.WorkflowID(id)).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	// Edges
+	if _, err := tx.Edge.Delete().Where(edge.WorkflowID(id)).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	// Steps
+	if _, err := tx.Step.Delete().Where(step.WorkflowID(id)).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	// Canvas notes
+	if _, err := tx.CanvasNote.Delete().Where(canvasnote.WorkflowID(id)).Exec(ctx); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	// Workflow
+	if err := tx.Workflow.DeleteOneID(id).Exec(ctx); err != nil {
 		_ = tx.Rollback()
 		return err
 	}

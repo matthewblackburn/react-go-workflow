@@ -40,15 +40,6 @@ func (r *HTTPRequestRunner) Run(ctx context.Context, config map[string]any, inpu
 		}
 	}
 
-	// Set auth
-	authType, _ := config["auth_type"].(string)
-	authValue, _ := config["auth_value"].(string)
-	if authType == "bearer" && authValue != "" {
-		req.Header.Set("Authorization", "Bearer "+authValue)
-	} else if authType == "basic" && authValue != "" {
-		req.Header.Set("Authorization", "Basic "+authValue)
-	}
-
 	if req.Header.Get("Content-Type") == "" && bodyReader != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}

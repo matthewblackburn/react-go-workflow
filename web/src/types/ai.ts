@@ -35,4 +35,5 @@ export interface GenerateWorkflowResponse {
   edges: GeneratedEdge[];
   summary: string;
   input_schema?: Record<string, unknown>;
+  missing_secrets?: string[];
 }

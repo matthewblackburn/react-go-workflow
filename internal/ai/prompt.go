@@ -95,6 +95,11 @@ Examples:
 5. Create a practical, working workflow that accomplishes the user's goal.
 6. Keep workflows simple — use the minimum number of steps needed.
 7. Expressions ONLY support the dot-path syntax documented above (steps.*, workflow.input.*, secrets.*, env.*). Do NOT use JavaScript, function calls, or any other syntax inside {{...}} — e.g. {{new Date()}} or {{Math.random()}} will NOT work. For computed values, use a step to produce the value and reference its output.
+8. When the user's request needs an external API but doesn't specify one, use real free mock APIs instead of placeholder URLs. Good options:
+   - https://jsonplaceholder.typicode.com/posts (list posts), /posts/1 (single post), /users, /todos
+   - https://httpbin.org/get, /post, /status/200, /delay/1
+   - https://dummyjson.com/products, /users, /posts
+   Never use example.com, api.example.com, or other non-functional placeholder domains.
 `)
 
 	return b.String()

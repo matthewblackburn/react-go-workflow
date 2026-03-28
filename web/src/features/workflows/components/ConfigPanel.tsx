@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { CircleCheck, CircleX, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { workflowApi } from '@/api/workflows';
 import { JsonViewer } from '@/components/editors/CodeEditor';
+import { JsonBuilder, RULES_SCHEMA } from '@/components/json-builder/JsonBuilder';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -182,9 +183,15 @@ export function ConfigPanel({
 function KeyValueEditor({
   value,
   onChange,
+  currentNodeId,
+  allStepNodes,
+  workflowInputSchema,
 }: {
   value: Record<string, string>;
   onChange: (value: Record<string, string>) => void;
+  currentNodeId: string;
+  allStepNodes: StepOption[];
+  workflowInputSchema?: Record<string, any>;
 }) {
   const entries = Object.entries(value ?? {});
 
@@ -214,12 +221,16 @@ function KeyValueEditor({
             placeholder="Key"
             className="h-7 flex-1 text-xs"
           />
-          <Input
-            value={v}
-            onChange={(e) => updateEntry(i, k, e.target.value)}
-            placeholder="Value"
-            className="h-7 flex-1 text-xs"
-          />
+          <div className="flex-1">
+            <StepReferenceInput
+              value={v}
+              onChange={(val) => updateEntry(i, k, val)}
+              currentNodeId={currentNodeId}
+              allStepNodes={allStepNodes}
+              workflowInputSchema={workflowInputSchema}
+              placeholder="Value"
+            />
+          </div>
           <button
             type="button"
             onClick={() => removeEntry(i)}
@@ -440,6 +451,9 @@ function ConfigureContent({
               <KeyValueEditor
                 value={(config[key] as Record<string, string>) ?? {}}
                 onChange={(v) => updateField(key, v)}
+                currentNodeId={currentNodeId}
+                allStepNodes={allStepNodes}
+                workflowInputSchema={workflowInputSchema}
               />
             ) : isStringArray ? (
               <StringArrayEditor
@@ -511,6 +525,26 @@ function ConfigureContent({
           </div>
         );
       })}
+
+      {stepType?.output_schema?.dynamicOutput && (
+        <>
+          <Separator />
+          <div className="space-y-2">
+            <Label className="text-xs">Output Schema</Label>
+            <p className="text-[11px] text-muted-foreground">
+              Define the fields this step will output so other steps can reference them
+            </p>
+            <div className="rounded-md border p-3">
+              <JsonBuilder
+                value={config._outputSchema as Record<string, any> | undefined}
+                onChange={(v) => onConfigChange({ ...config, _outputSchema: v })}
+                rules={RULES_SCHEMA}
+                emit="schema"
+              />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
