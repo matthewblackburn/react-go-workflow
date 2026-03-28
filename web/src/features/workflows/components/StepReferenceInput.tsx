@@ -1,6 +1,15 @@
-import { X } from 'lucide-react';
-import { forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Braces, Key, Variable, Workflow as WorkflowIcon, X } from 'lucide-react';
+import {
+  forwardRef,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
+import type { ValueMenuItem } from '@/components/json-builder/JsonBuilder';
 import { SecretKeysContext, WorkflowInputSchemaContext } from './StepNode';
 
 interface StepOption {
@@ -745,3 +754,239 @@ const MentionDropdown = forwardRef<HTMLDivElement, MentionDropdownProps>(
   },
 );
 MentionDropdown.displayName = 'MentionDropdown';
+
+export function RefPicker({
+  onChange,
+  options,
+  placeholder,
+  prefix,
+  buildRef,
+  parsedName,
+  parsedPath,
+  outputSchema,
+  pathPrefix,
+  seed,
+}: {
+  onChange: (v: string) => void;
+  options: { id: string; label: string }[];
+  placeholder: string;
+  prefix: 'steps' | 'workflow' | 'secrets';
+  buildRef: (id: string, label: string) => string;
+  parsedName?: string;
+  parsedPath?: string;
+  outputSchema?: Record<string, any>;
+  pathPrefix?: string;
+  seed: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  if (parsedName) {
+    return (
+      <RefPill
+        stepName={parsedName}
+        path={parsedPath ?? ''}
+        pathPrefix={pathPrefix}
+        outputSchema={outputSchema}
+        onPathChange={(newPath) => {
+          if (prefix === 'steps') {
+            onChange(`{{steps.${parsedName}.${newPath}}}`);
+          } else if (prefix === 'workflow') {
+            onChange(newPath ? `{{workflow.input.${newPath}}}` : '{{workflow.input}}');
+          } else if (prefix === 'secrets') {
+            onChange(newPath ? `{{secrets.${newPath}}}` : seed);
+          }
+        }}
+        onRemove={() => onChange(seed)}
+        prefix={prefix}
+      />
+    );
+  }
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="h-5 rounded px-1.5 text-[11px] text-muted-foreground italic leading-5 transition-colors hover:bg-muted/50"
+      >
+        {placeholder}
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute top-full left-0 z-50 mt-1 max-h-48 min-w-[160px] overflow-y-auto rounded-md border bg-popover p-1 shadow-md">
+            {options.length === 0 ? (
+              <div className="px-2 py-1.5 text-[11px] text-muted-foreground">No options</div>
+            ) : (
+              options.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(buildRef(opt.id, opt.label));
+                    setOpen(false);
+                  }}
+                  className="flex w-full rounded-sm px-2 py-1.5 text-left text-[11px] hover:bg-accent hover:text-accent-foreground"
+                >
+                  {opt.label}
+                </button>
+              ))
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+interface VariableInfo {
+  stepLabel: string;
+  variableName: string;
+}
+
+export function useReferenceMenuItems({
+  allStepNodes,
+  currentNodeId,
+  workflowInputSchema,
+  secretKeys,
+  variables = [],
+}: {
+  allStepNodes: StepOption[];
+  currentNodeId?: string;
+  workflowInputSchema?: Record<string, any>;
+  secretKeys: string[];
+  variables?: VariableInfo[];
+}): ValueMenuItem[] {
+  return useMemo(
+    () => [
+      {
+        label: 'Step',
+        icon: <Braces className="h-3 w-3 text-violet-500" />,
+        seed: '{{steps.',
+        match: (v: string) => v.startsWith('{{steps.'),
+        render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+          const stepLabel = value.match(/\{\{steps\.([^.]+)\./)?.[1];
+          const stepNode = stepLabel
+            ? allStepNodes.find((s) => s.label === stepLabel)
+            : undefined;
+          const stepPath = value.match(/\{\{steps\.[^.]+\.(.+)\}\}/)?.[1] ?? '';
+          return (
+            <RefPicker
+              onChange={onChange}
+              seed="{{steps."
+              prefix="steps"
+              options={allStepNodes
+                .filter((s) => !currentNodeId || s.id !== currentNodeId)
+                .map((s) => ({ id: s.id, label: s.label }))}
+              placeholder="Select step..."
+              buildRef={(_id, label) => `{{steps.${label}.output}}`}
+              parsedName={stepLabel}
+              parsedPath={stepPath}
+              outputSchema={stepNode?.outputSchema}
+              pathPrefix="output"
+            />
+          );
+        },
+      },
+      {
+        label: 'Workflow Input',
+        icon: <WorkflowIcon className="h-3 w-3 text-sky-500" />,
+        seed: '{{workflow.',
+        match: (v: string) => v.startsWith('{{workflow.'),
+        render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+          const inputPath =
+            value.match(/\{\{workflow\.input(?:\.([^}]*))?\}\}/)?.[1] ?? '';
+          const hasValue = value.includes('{{workflow.input');
+          return (
+            <RefPicker
+              onChange={onChange}
+              seed="{{workflow."
+              prefix="workflow"
+              options={[{ id: 'workflow', label: 'Workflow Input' }]}
+              placeholder="Select..."
+              buildRef={() => '{{workflow.input}}'}
+              parsedName={hasValue ? 'Workflow Input' : undefined}
+              parsedPath={hasValue ? inputPath : undefined}
+              outputSchema={workflowInputSchema}
+              pathPrefix=""
+            />
+          );
+        },
+      },
+      {
+        label: 'Secret',
+        icon: <Key className="h-3 w-3 text-rose-500" />,
+        seed: '{{secrets.',
+        match: (v: string) => v.startsWith('{{secrets.'),
+        render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+          const secretKey = value.match(/\{\{secrets\.([^}]+)\}\}/)?.[1];
+          const hasValue = value.includes('{{secrets.');
+          const secretSchema = {
+            type: 'object',
+            properties: Object.fromEntries(
+              secretKeys.map((k) => [k, { type: 'string' }]),
+            ),
+          };
+          return (
+            <RefPicker
+              onChange={onChange}
+              seed="{{secrets."
+              prefix="secrets"
+              options={[{ id: 'secrets', label: 'Secret' }]}
+              placeholder="Select..."
+              buildRef={() => '{{secrets.}}'}
+              parsedName={hasValue ? 'Secret' : undefined}
+              parsedPath={hasValue ? (secretKey ?? '') : undefined}
+              outputSchema={secretSchema}
+              pathPrefix=""
+            />
+          );
+        },
+      },
+      ...(variables.length > 0
+        ? [
+            {
+              label: 'Variable',
+              icon: <Variable className="h-3 w-3 text-emerald-500" />,
+              seed: '{{steps.',
+              match: (v: string) => {
+                for (const vi of variables) {
+                  if (v === `{{steps.${vi.stepLabel}.output.${vi.variableName}}}`) return true;
+                }
+                return false;
+              },
+              render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+                const matched = variables.find(
+                  (vi) => value === `{{steps.${vi.stepLabel}.output.${vi.variableName}}}`,
+                );
+                return (
+                  <RefPicker
+                    onChange={onChange}
+                    seed="{{steps."
+                    prefix="steps"
+                    options={variables.map((vi) => ({
+                      id: `${vi.stepLabel}.output.${vi.variableName}`,
+                      label: vi.variableName,
+                    }))}
+                    placeholder="Select variable..."
+                    buildRef={(_id, _label) => {
+                      const vi = variables.find((v) => v.variableName === _label);
+                      return vi
+                        ? `{{steps.${vi.stepLabel}.output.${vi.variableName}}}`
+                        : '';
+                    }}
+                    parsedName={matched ? matched.variableName : undefined}
+                    parsedPath={undefined}
+                    outputSchema={undefined}
+                    pathPrefix=""
+                  />
+                );
+              },
+            },
+          ]
+        : []),
+    ],
+    [allStepNodes, currentNodeId, workflowInputSchema, secretKeys, variables],
+  );
+}

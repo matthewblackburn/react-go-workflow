@@ -53,11 +53,12 @@ type Tool struct {
 }
 
 type apiRequest struct {
-	Model     string    `json:"model"`
-	MaxTokens int       `json:"max_tokens"`
-	System    string    `json:"system,omitempty"`
-	Messages  []Message `json:"messages"`
-	Tools     []Tool    `json:"tools,omitempty"`
+	Model      string         `json:"model"`
+	MaxTokens  int            `json:"max_tokens"`
+	System     string         `json:"system,omitempty"`
+	Messages   []Message      `json:"messages"`
+	Tools      []Tool         `json:"tools,omitempty"`
+	ToolChoice map[string]any `json:"tool_choice,omitempty"`
 }
 
 type apiResponse struct {
@@ -87,6 +88,11 @@ func (c *Client) CreateMessage(ctx context.Context, systemPrompt string, userMes
 			{Role: "user", Content: userMessage},
 		},
 		Tools: tools,
+	}
+
+	// Force tool use when tools are provided
+	if len(tools) > 0 {
+		reqBody.ToolChoice = map[string]any{"type": "any"}
 	}
 
 	body, err := json.Marshal(reqBody)

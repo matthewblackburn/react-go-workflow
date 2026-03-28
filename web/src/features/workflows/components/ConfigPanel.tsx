@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { CircleCheck, CircleX, Loader2, Plus, Trash2, X } from 'lucide-react';
+import { useContext, useState } from 'react';
 import { workflowApi } from '@/api/workflows';
 import { JsonViewer } from '@/components/editors/CodeEditor';
-import { JsonBuilder, RULES_SCHEMA } from '@/components/json-builder/JsonBuilder';
+import { JsonBuilder, RULES_OUTPUT, RULES_SCHEMA } from '@/components/json-builder/JsonBuilder';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -17,15 +18,18 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TypeBadge, VALUE_TYPES } from '@/components/ui/type-picker';
 import type { StepResult } from '@/hooks/useExecutionWS';
 import type { StepType, Workflow } from '@/types/workflow';
-import { StepReferenceInput } from './StepReferenceInput';
+import { SecretKeysContext } from './StepNode';
+import { StepReferenceInput, useReferenceMenuItems } from './StepReferenceInput';
 import { WaitForStepsSelect } from './WaitForStepsSelect';
 
 interface StepOption {
   id: string;
   label: string;
   isCondition: boolean;
+  stepTypeName?: string;
   outputSchema?: Record<string, any>;
 }
 
@@ -173,6 +177,85 @@ export function ConfigPanel({
             onBranchChange={onBranchChange}
           />
         </ScrollArea>
+      )}
+    </div>
+  );
+}
+
+// ── Typed value input (type badge + matching input) ──
+
+function detectValueType(val: string): string {
+  if (val === 'true' || val === 'false') return 'boolean';
+  if (/^\d{4}-\d{2}-\d{2}T/.test(val)) return 'datetime';
+  if (val !== '' && !Number.isNaN(Number(val)) && !val.startsWith('{{')) return 'number';
+  return 'string';
+}
+
+function TypedValueInput({
+  value,
+  onChange,
+  currentNodeId,
+  allStepNodes,
+  workflowInputSchema,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  currentNodeId: string;
+  allStepNodes: StepOption[];
+  workflowInputSchema?: Record<string, any>;
+}) {
+  const [valueType, setValueType] = useState(() => detectValueType(value));
+
+  const handleTypeChange = (newType: string) => {
+    setValueType(newType);
+    if (newType === 'boolean') onChange('false');
+    else if (newType === 'number') onChange('0');
+    else if (newType === 'datetime') onChange(new Date().toISOString());
+    else onChange('');
+  };
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <TypeBadge type={valueType} types={VALUE_TYPES} onChange={handleTypeChange} />
+
+      {valueType === 'boolean' ? (
+        <div className="flex flex-1 items-center gap-2">
+          <Checkbox
+            checked={value === 'true'}
+            onCheckedChange={(v) => onChange(v ? 'true' : 'false')}
+          />
+          <span className="text-muted-foreground text-xs">
+            {value === 'true' ? 'True' : 'False'}
+          </span>
+        </div>
+      ) : valueType === 'datetime' ? (
+        <Input
+          type="datetime-local"
+          value={toLocalDatetime(value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            onChange(val ? new Date(val).toISOString() : '');
+          }}
+          className="h-8 flex-1 text-xs"
+        />
+      ) : valueType === 'number' ? (
+        <Input
+          type="number"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-8 flex-1 text-xs"
+        />
+      ) : (
+        <div className="flex-1">
+          <StepReferenceInput
+            value={value}
+            onChange={onChange}
+            currentNodeId={currentNodeId}
+            allStepNodes={allStepNodes}
+            workflowInputSchema={workflowInputSchema}
+            placeholder="Enter value..."
+          />
+        </div>
       )}
     </div>
   );
@@ -327,6 +410,18 @@ function WorkflowPicker({ value, onChange }: { value: string; onChange: (value: 
   );
 }
 
+/** Convert an ISO string to the format datetime-local expects: YYYY-MM-DDTHH:mm */
+function toLocalDatetime(iso: string): string {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toISOString().slice(0, 16);
+  } catch {
+    return '';
+  }
+}
+
 function ConfigureContent({
   stepName,
   stepType,
@@ -360,6 +455,27 @@ function ConfigureContent({
   function updateField(key: string, value: any) {
     onConfigChange({ ...config, [key]: value });
   }
+
+  const secretKeys = useContext(SecretKeysContext);
+
+  const variables = allStepNodes
+    .filter((s) => s.id !== currentNodeId && s.stepTypeName === 'set_variable' && s.outputSchema?.properties)
+    .flatMap((s) => {
+      const props = s.outputSchema?.properties as Record<string, any> | undefined;
+      if (!props) return [];
+      return Object.keys(props).map((varName) => ({
+        stepLabel: s.label,
+        variableName: varName,
+      }));
+    });
+
+  const referenceMenuItems = useReferenceMenuItems({
+    allStepNodes,
+    currentNodeId,
+    workflowInputSchema,
+    secretKeys,
+    variables,
+  });
 
   return (
     <div className="space-y-4 p-4">
@@ -414,8 +530,9 @@ function ConfigureContent({
         // Conditional visibility
         if (field.dependsOn) {
           const dep = field.dependsOn as Record<string, any>;
-          if (dep.notEqual && config[dep.field] === dep.notEqual) return null;
-          if (dep.notEqual && !config[dep.field]) return null;
+          if (dep.notEqual && (config[dep.field] === dep.notEqual || !config[dep.field]))
+            return null;
+          if (dep.equals && config[dep.field] !== dep.equals) return null;
         }
 
         // Object with additionalProperties → key-value editor
@@ -423,6 +540,7 @@ function ConfigureContent({
 
         // Array of strings → string list editor
         const isStringArray = fieldType === 'array' && field.items?.type === 'string';
+
 
         // Workflow picker
         const isWorkflowPicker = format === 'workflow-picker';
@@ -437,7 +555,9 @@ function ConfigureContent({
           !isWorkflowPicker &&
           !isBoolField &&
           fieldType !== 'number' &&
-          format !== 'password';
+          format !== 'password' &&
+          format !== 'datetime' &&
+          format !== 'typed-value';
         const isMultiline = format === 'textarea' || format === 'json' || format === 'sql';
 
         return (
@@ -447,6 +567,16 @@ function ConfigureContent({
             </Label>
             {isWorkflowPicker ? (
               <WorkflowPicker value={String(currentValue)} onChange={(v) => updateField(key, v)} />
+            ) : format === 'json-builder' ? (
+              <div className="rounded-md border p-3">
+                <JsonBuilder
+                  value={(config[key] as Record<string, any>) ?? undefined}
+                  onChange={(v) => updateField(key, v)}
+                  rules={RULES_OUTPUT}
+                  emit="values"
+                  valueMenuItems={referenceMenuItems}
+                />
+              </div>
             ) : hasAdditionalProps ? (
               <KeyValueEditor
                 value={(config[key] as Record<string, string>) ?? {}}
@@ -485,6 +615,25 @@ function ConfigureContent({
                   ))}
                 </SelectContent>
               </Select>
+            ) : format === 'typed-value' ? (
+              <TypedValueInput
+                value={String(currentValue)}
+                onChange={(v) => updateField(key, v)}
+                currentNodeId={currentNodeId}
+                allStepNodes={allStepNodes}
+                workflowInputSchema={workflowInputSchema}
+              />
+            ) : format === 'datetime' ? (
+              <Input
+                id={`field-${key}`}
+                type="datetime-local"
+                value={toLocalDatetime(String(currentValue))}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  updateField(key, val ? new Date(val).toISOString() : '');
+                }}
+                className="text-xs"
+              />
             ) : format === 'password' ? (
               <Input
                 id={`field-${key}`}

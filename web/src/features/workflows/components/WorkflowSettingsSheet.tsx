@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell,
-  Braces,
   ChevronDown,
   Circle,
   CircleCheck,
@@ -11,20 +10,17 @@ import {
   Database,
   ExternalLink,
   Globe,
-  Key,
   Loader2,
   Play,
   Save,
-  Workflow as WorkflowIcon,
 } from 'lucide-react';
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { executionApi, workflowApi } from '@/api/workflows';
 import { JsonViewer } from '@/components/editors/CodeEditor';
 import {
   JsonBuilder,
   RULES_OUTPUT,
-  type ValueMenuItem,
 } from '@/components/json-builder/JsonBuilder';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -46,7 +42,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { Workflow, WorkflowExecution } from '@/types/workflow';
 import { CronBuilder } from './CronBuilder';
 import { SecretKeysContext, StepNodesContext, WorkflowInputSchemaContext } from './StepNode';
-import { RefPill } from './StepReferenceInput';
+import { useReferenceMenuItems } from './StepReferenceInput';
 import { TableSelect } from './TableSelect';
 import { TimezoneSelect } from './TimezoneSelect';
 
@@ -578,91 +574,6 @@ function InputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => vo
   );
 }
 
-function RefPicker({
-  onChange,
-  options,
-  placeholder,
-  prefix,
-  buildRef,
-  parsedName,
-  parsedPath,
-  outputSchema,
-  pathPrefix,
-  seed,
-}: {
-  onChange: (v: string) => void;
-  options: { id: string; label: string }[];
-  placeholder: string;
-  prefix: 'steps' | 'workflow' | 'secrets';
-  buildRef: (id: string, label: string) => string;
-  parsedName?: string;
-  parsedPath?: string;
-  outputSchema?: Record<string, any>;
-  pathPrefix?: string;
-  seed: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  if (parsedName) {
-    return (
-      <RefPill
-        stepName={parsedName}
-        path={parsedPath ?? ''}
-        pathPrefix={pathPrefix}
-        outputSchema={outputSchema}
-        onPathChange={(newPath) => {
-          if (prefix === 'steps') {
-            onChange(`{{steps.${parsedName}.${newPath}}}`);
-          } else if (prefix === 'workflow') {
-            onChange(newPath ? `{{workflow.input.${newPath}}}` : '{{workflow.input}}');
-          } else if (prefix === 'secrets') {
-            onChange(newPath ? `{{secrets.${newPath}}}` : seed);
-          }
-        }}
-        onRemove={() => onChange(seed)}
-        prefix={prefix}
-      />
-    );
-  }
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="h-5 rounded px-1.5 text-[11px] text-muted-foreground italic leading-5 transition-colors hover:bg-muted/50"
-      >
-        {placeholder}
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 z-50 mt-1 max-h-48 min-w-160px overflow-y-auto rounded-md border bg-popover p-1 shadow-md">
-            {options.length === 0 ? (
-              <div className="px-2 py-1.5 text-[11px] text-muted-foreground">No options</div>
-            ) : (
-              options.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => {
-                    onChange(buildRef(opt.id, opt.label));
-                    setOpen(false);
-                  }}
-                  className="flex w-full rounded-sm px-2 py-1.5 text-left text-[11px] hover:bg-accent hover:text-accent-foreground"
-                >
-                  {opt.label}
-                </button>
-              ))
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
 function OutputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => void }) {
   const [outputSchema, setOutputSchema] = useState<Record<string, any> | undefined>(
     workflow.output_schema,
@@ -684,90 +595,11 @@ function OutputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => v
   });
 
   const secretKeys = useContext(SecretKeysContext);
-
-  const valueMenuItems: ValueMenuItem[] = useMemo(
-    () => [
-      {
-        label: 'Step',
-        icon: <Braces className="h-3 w-3 text-violet-500" />,
-        seed: '{{steps.',
-        match: (v: string) => v.startsWith('{{steps.'),
-        render: ({ value, onChange }) => {
-          const stepLabel = value.match(/\{\{steps\.([^.]+)\./)?.[1];
-          const stepNode = stepLabel ? allStepNodes.find((s) => s.label === stepLabel) : undefined;
-          const stepPath = value.match(/\{\{steps\.[^.]+\.(.+)\}\}/)?.[1] ?? '';
-          return (
-            <RefPicker
-              onChange={onChange}
-              seed="{{steps."
-              prefix="steps"
-              options={allStepNodes.map((s) => ({ id: s.id, label: s.label }))}
-              placeholder="Select step..."
-              buildRef={(_id, label) => `{{steps.${label}.output}}`}
-              parsedName={stepLabel}
-              parsedPath={stepPath}
-              outputSchema={stepNode?.outputSchema}
-              pathPrefix="output"
-            />
-          );
-        },
-      },
-      {
-        label: 'Workflow Input',
-        icon: <WorkflowIcon className="h-3 w-3 text-sky-500" />,
-        seed: '{{workflow.',
-        match: (v: string) => v.startsWith('{{workflow.'),
-        render: ({ value, onChange }) => {
-          const inputPath = value.match(/\{\{workflow\.input(?:\.([^}]*))?\}\}/)?.[1] ?? '';
-          const hasValue = value.includes('{{workflow.input');
-          return (
-            <RefPicker
-              onChange={onChange}
-              seed="{{workflow."
-              prefix="workflow"
-              options={[{ id: 'workflow', label: 'Workflow Input' }]}
-              placeholder="Select..."
-              buildRef={() => '{{workflow.input}}'}
-              parsedName={hasValue ? 'Workflow Input' : undefined}
-              parsedPath={hasValue ? inputPath : undefined}
-              outputSchema={workflowInputSchema}
-              pathPrefix=""
-            />
-          );
-        },
-      },
-      {
-        label: 'Secret',
-        icon: <Key className="h-3 w-3 text-rose-500" />,
-        seed: '{{secrets.',
-        match: (v: string) => v.startsWith('{{secrets.'),
-        render: ({ value, onChange }) => {
-          const secretKey = value.match(/\{\{secrets\.([^}]+)\}\}/)?.[1];
-          const hasValue = value.includes('{{secrets.');
-          // Build a fake schema so RefPill typeahead shows secret keys
-          const secretSchema = {
-            type: 'object',
-            properties: Object.fromEntries(secretKeys.map((k) => [k, { type: 'string' }])),
-          };
-          return (
-            <RefPicker
-              onChange={onChange}
-              seed="{{secrets."
-              prefix="secrets"
-              options={[{ id: 'secrets', label: 'Secret' }]}
-              placeholder="Select..."
-              buildRef={() => '{{secrets.}}'}
-              parsedName={hasValue ? 'Secret' : undefined}
-              parsedPath={hasValue ? (secretKey ?? '') : undefined}
-              outputSchema={secretSchema}
-              pathPrefix=""
-            />
-          );
-        },
-      },
-    ],
-    [allStepNodes, workflowInputSchema, secretKeys],
-  );
+  const valueMenuItems = useReferenceMenuItems({
+    allStepNodes,
+    workflowInputSchema,
+    secretKeys,
+  });
 
   return (
     <>

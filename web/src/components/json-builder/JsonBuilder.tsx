@@ -130,28 +130,19 @@ function TypePickerPopup({
     onMenuItemSelect?: (item: ValueMenuItem) => void;
     activeMenuItemLabel?: string;
 }) {
-    const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+    if (!anchorRef.current) return null;
 
-    useEffect(() => {
-        if (anchorRef.current) {
-            const rect = anchorRef.current.getBoundingClientRect();
-            const dropH = 250;
-            const spaceBelow = window.innerHeight - rect.bottom;
-            setPos({
-                top: spaceBelow < dropH && rect.top > spaceBelow ? rect.top - dropH - 4 : rect.bottom + 4,
-                left: rect.left,
-            });
-        }
-    }, [anchorRef]);
-
-    if (!pos) return null;
+    // Position relative to anchor's offset parent for scroll-safe placement
+    const anchor = anchorRef.current;
+    const top = anchor.offsetTop + anchor.offsetHeight + 4;
+    const left = anchor.offsetLeft;
 
     return (
         <>
             <div className="fixed inset-0 z-9998" onClick={onClose} />
             <div
-                className="fixed z-9999 min-w-130px rounded-md border bg-popover p-1 shadow-md"
-                style={{ top: pos.top, left: pos.left }}
+                className="absolute z-9999 min-w-[130px] rounded-md border bg-popover p-1 shadow-md"
+                style={{ top, left }}
             >
                 {TYPES.map((t) => (
                     <button
@@ -536,7 +527,7 @@ function FieldRow({
     // Display mode: show as clickable buttons
     if (!editing && !isArrayItem) {
         return (
-            <div>
+            <div className="relative">
                 <div className="group flex items-center gap-1 py-[3px]">
                     {depth > 0 && <TreeConnector />}
                     {/* Type indicator */}
@@ -663,7 +654,7 @@ function FieldRow({
 
     // Edit mode: show inputs
     return (
-        <div>
+        <div className="relative">
             <div
                 ref={rowRef}
                 className="group flex items-center gap-1 py-[3px]"

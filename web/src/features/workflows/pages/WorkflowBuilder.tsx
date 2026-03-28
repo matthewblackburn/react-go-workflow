@@ -404,6 +404,12 @@ function WorkflowBuilderInner() {
           outputSchema = d.config._outputSchema as Record<string, any>;
         }
 
+        // set_variable: derive output schema from variable_name in config
+        if (d.stepType?.name === 'set_variable' && d.config?.variable_name) {
+          const varName = String(d.config.variable_name);
+          outputSchema = { type: 'object', properties: { [varName]: { type: 'string' } } };
+        }
+
         // Override with runtime output shape if available
         const result = stepResults.get(n.id);
         if (result?.output && typeof result.output === 'object') {
@@ -413,6 +419,7 @@ function WorkflowBuilderInner() {
         return {
           id: n.id,
           label: d.label,
+          stepTypeName: d.stepType?.name,
           isCondition: ((d.stepType?.config_schema?.outputs as any[])?.length ?? 0) > 1,
           outputSchema,
         };

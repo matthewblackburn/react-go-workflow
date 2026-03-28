@@ -46,18 +46,8 @@ var builtinTypes = []seedType{
 		ConfigSchema: M{
 			"type": "object",
 			"properties": M{
-				"mappings": M{
-					"type":  "array",
-					"title": "Mappings",
-					"description": "Define how to map input fields to output fields",
-					"items": M{
-						"type": "object",
-						"properties": M{
-							"source": M{"type": "string", "title": "Source", "description": "Expression for the source value, e.g. {{steps.fetch.output.body.name}}"},
-							"target": M{"type": "string", "title": "Target", "description": "Name of the output field"},
-						},
-					},
-				},
+				"mappings": M{"type": "object", "title": "Mappings", "description": "Map output field names to source expressions", "format": "json-builder",
+					"additionalProperties": M{"type": "string"}},
 			},
 		},
 		InputSchema:  M{"type": "object", "description": "Data from previous steps"},
@@ -124,7 +114,7 @@ var builtinTypes = []seedType{
 			"type": "object",
 			"properties": M{
 				"variable_name": M{"type": "string", "title": "Variable name", "description": "A name for this variable so you can reference it later"},
-				"value":         M{"type": "string", "title": "Value", "description": "The value to store. Can be an expression like {{steps.fetch.output.body.id}}"},
+				"value":         M{"type": "string", "title": "Value", "description": "The value to store. Can be an expression like {{steps.fetch.output.body.id}}", "format": "typed-value"},
 			},
 			"required": []string{"variable_name", "value"},
 		},
