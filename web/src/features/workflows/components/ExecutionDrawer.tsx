@@ -114,7 +114,7 @@ export function ExecutionDrawer({
   const isFailed = executionStatus === 'failed';
 
   return (
-    <div className="flex max-h-[70vh] shrink-0 flex-col border-t bg-background">
+    <div className="flex max-h-[40vh] shrink-0 flex-col border-t bg-background">
       {/* Header — always visible */}
       <button
         type="button"

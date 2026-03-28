@@ -860,96 +860,12 @@ export function useReferenceMenuItems({
 }): ValueMenuItem[] {
   return useMemo(
     () => [
-      {
-        label: 'Step',
-        icon: <Braces className="h-3 w-3 text-violet-500" />,
-        seed: '{{steps.',
-        match: (v: string) => v.startsWith('{{steps.'),
-        render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
-          const stepLabel = value.match(/\{\{steps\.([^.]+)\./)?.[1];
-          const stepNode = stepLabel
-            ? allStepNodes.find((s) => s.label === stepLabel)
-            : undefined;
-          const stepPath = value.match(/\{\{steps\.[^.]+\.(.+)\}\}/)?.[1] ?? '';
-          return (
-            <RefPicker
-              onChange={onChange}
-              seed="{{steps."
-              prefix="steps"
-              options={allStepNodes
-                .filter((s) => !currentNodeId || s.id !== currentNodeId)
-                .map((s) => ({ id: s.id, label: s.label }))}
-              placeholder="Select step..."
-              buildRef={(_id, label) => `{{steps.${label}.output}}`}
-              parsedName={stepLabel}
-              parsedPath={stepPath}
-              outputSchema={stepNode?.outputSchema}
-              pathPrefix="output"
-            />
-          );
-        },
-      },
-      {
-        label: 'Workflow Input',
-        icon: <WorkflowIcon className="h-3 w-3 text-sky-500" />,
-        seed: '{{workflow.',
-        match: (v: string) => v.startsWith('{{workflow.'),
-        render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
-          const inputPath =
-            value.match(/\{\{workflow\.input(?:\.([^}]*))?\}\}/)?.[1] ?? '';
-          const hasValue = value.includes('{{workflow.input');
-          return (
-            <RefPicker
-              onChange={onChange}
-              seed="{{workflow."
-              prefix="workflow"
-              options={[{ id: 'workflow', label: 'Workflow Input' }]}
-              placeholder="Select..."
-              buildRef={() => '{{workflow.input}}'}
-              parsedName={hasValue ? 'Workflow Input' : undefined}
-              parsedPath={hasValue ? inputPath : undefined}
-              outputSchema={workflowInputSchema}
-              pathPrefix=""
-            />
-          );
-        },
-      },
-      {
-        label: 'Secret',
-        icon: <Key className="h-3 w-3 text-rose-500" />,
-        seed: '{{secrets.',
-        match: (v: string) => v.startsWith('{{secrets.'),
-        render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
-          const secretKey = value.match(/\{\{secrets\.([^}]+)\}\}/)?.[1];
-          const hasValue = value.includes('{{secrets.');
-          const secretSchema = {
-            type: 'object',
-            properties: Object.fromEntries(
-              secretKeys.map((k) => [k, { type: 'string' }]),
-            ),
-          };
-          return (
-            <RefPicker
-              onChange={onChange}
-              seed="{{secrets."
-              prefix="secrets"
-              options={[{ id: 'secrets', label: 'Secret' }]}
-              placeholder="Select..."
-              buildRef={() => '{{secrets.}}'}
-              parsedName={hasValue ? 'Secret' : undefined}
-              parsedPath={hasValue ? (secretKey ?? '') : undefined}
-              outputSchema={secretSchema}
-              pathPrefix=""
-            />
-          );
-        },
-      },
       ...(variables.length > 0
         ? [
             {
               label: 'Variable',
-              icon: <Variable className="h-3 w-3 text-emerald-500" />,
-              seed: '{{steps.',
+              icon: <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-emerald-500/15"><Variable className="h-2.5 w-2.5 text-emerald-500" /></span>,
+              seed: `{{steps.${variables[0].stepLabel}.output.${variables[0].variableName}}}`,
               match: (v: string) => {
                 for (const vi of variables) {
                   if (v === `{{steps.${vi.stepLabel}.output.${vi.variableName}}}`) return true;
@@ -986,6 +902,90 @@ export function useReferenceMenuItems({
             },
           ]
         : []),
+      {
+        label: 'Step',
+        icon: <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-violet-500/15"><Braces className="h-2.5 w-2.5 text-violet-500" /></span>,
+        seed: '{{steps.',
+        match: (v: string) => v.startsWith('{{steps.'),
+        render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+          const stepLabel = value.match(/\{\{steps\.([^.]+)\./)?.[1];
+          const stepNode = stepLabel
+            ? allStepNodes.find((s) => s.label === stepLabel)
+            : undefined;
+          const stepPath = value.match(/\{\{steps\.[^.]+\.(.+)\}\}/)?.[1] ?? '';
+          return (
+            <RefPicker
+              onChange={onChange}
+              seed="{{steps."
+              prefix="steps"
+              options={allStepNodes
+                .filter((s) => !currentNodeId || s.id !== currentNodeId)
+                .map((s) => ({ id: s.id, label: s.label }))}
+              placeholder="Select step..."
+              buildRef={(_id, label) => `{{steps.${label}.output}}`}
+              parsedName={stepLabel}
+              parsedPath={stepPath}
+              outputSchema={stepNode?.outputSchema}
+              pathPrefix="output"
+            />
+          );
+        },
+      },
+      {
+        label: 'Workflow Input',
+        icon: <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-sky-500/15"><WorkflowIcon className="h-2.5 w-2.5 text-sky-500" /></span>,
+        seed: '{{workflow.',
+        match: (v: string) => v.startsWith('{{workflow.'),
+        render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+          const inputPath =
+            value.match(/\{\{workflow\.input(?:\.([^}]*))?\}\}/)?.[1] ?? '';
+          const hasValue = value.includes('{{workflow.input');
+          return (
+            <RefPicker
+              onChange={onChange}
+              seed="{{workflow."
+              prefix="workflow"
+              options={[{ id: 'workflow', label: 'Workflow Input' }]}
+              placeholder="Select..."
+              buildRef={() => '{{workflow.input}}'}
+              parsedName={hasValue ? 'Workflow Input' : undefined}
+              parsedPath={hasValue ? inputPath : undefined}
+              outputSchema={workflowInputSchema}
+              pathPrefix=""
+            />
+          );
+        },
+      },
+      {
+        label: 'Secret',
+        icon: <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-rose-500/15"><Key className="h-2.5 w-2.5 text-rose-500" /></span>,
+        seed: '{{secrets.',
+        match: (v: string) => v.startsWith('{{secrets.'),
+        render: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+          const secretKey = value.match(/\{\{secrets\.([^}]+)\}\}/)?.[1];
+          const hasValue = value.includes('{{secrets.');
+          const secretSchema = {
+            type: 'object',
+            properties: Object.fromEntries(
+              secretKeys.map((k) => [k, { type: 'string' }]),
+            ),
+          };
+          return (
+            <RefPicker
+              onChange={onChange}
+              seed="{{secrets."
+              prefix="secrets"
+              options={[{ id: 'secrets', label: 'Secret' }]}
+              placeholder="Select..."
+              buildRef={() => '{{secrets.}}'}
+              parsedName={hasValue ? 'Secret' : undefined}
+              parsedPath={hasValue ? (secretKey ?? '') : undefined}
+              outputSchema={secretSchema}
+              pathPrefix=""
+            />
+          );
+        },
+      },
     ],
     [allStepNodes, currentNodeId, workflowInputSchema, secretKeys, variables],
   );

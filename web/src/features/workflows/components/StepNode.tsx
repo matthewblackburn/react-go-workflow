@@ -8,6 +8,7 @@ import { StepReferenceInput } from './StepReferenceInput';
 export type StepNodeOption = {
   id: string;
   label: string;
+  stepTypeName?: string;
   isCondition: boolean;
   outputSchema?: Record<string, any>;
 };

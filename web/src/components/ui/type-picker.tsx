@@ -6,55 +6,24 @@ export interface TypeOption {
   label: string;
   letter: string;
   dot: string;
+  bg: string;
   text: string;
   bracket?: string;
 }
 
 export const VALUE_TYPES: TypeOption[] = [
-  { value: 'string', label: 'String', letter: 'S', dot: 'bg-green-500', text: 'text-green-500' },
-  { value: 'number', label: 'Number', letter: 'N', dot: 'bg-blue-500', text: 'text-blue-500' },
-  {
-    value: 'boolean',
-    label: 'Boolean',
-    letter: 'B',
-    dot: 'bg-amber-500',
-    text: 'text-amber-500',
-  },
-  {
-    value: 'datetime',
-    label: 'Date/Time',
-    letter: 'D',
-    dot: 'bg-cyan-500',
-    text: 'text-cyan-500',
-  },
+  { value: 'string', label: 'String', letter: 'S', dot: 'bg-green-500', bg: 'bg-green-500/15', text: 'text-green-500' },
+  { value: 'number', label: 'Number', letter: 'N', dot: 'bg-blue-500', bg: 'bg-blue-500/15', text: 'text-blue-500' },
+  { value: 'boolean', label: 'Boolean', letter: 'B', dot: 'bg-amber-500', bg: 'bg-amber-500/15', text: 'text-amber-500' },
+  { value: 'datetime', label: 'Date/Time', letter: 'D', dot: 'bg-cyan-500', bg: 'bg-cyan-500/15', text: 'text-cyan-500' },
 ];
 
 export const SCHEMA_TYPES: TypeOption[] = [
-  { value: 'string', label: 'String', letter: 'S', dot: 'bg-green-500', text: 'text-green-500' },
-  { value: 'number', label: 'Number', letter: 'N', dot: 'bg-blue-500', text: 'text-blue-500' },
-  {
-    value: 'boolean',
-    label: 'Boolean',
-    letter: 'B',
-    dot: 'bg-amber-500',
-    text: 'text-amber-500',
-  },
-  {
-    value: 'object',
-    label: 'Object',
-    letter: 'O',
-    dot: 'bg-violet-500',
-    text: 'text-violet-500',
-    bracket: '{ }',
-  },
-  {
-    value: 'array',
-    label: 'Array',
-    letter: 'A',
-    dot: 'bg-pink-500',
-    text: 'text-pink-500',
-    bracket: '[ ]',
-  },
+  { value: 'string', label: 'String', letter: 'S', dot: 'bg-green-500', bg: 'bg-green-500/15', text: 'text-green-500' },
+  { value: 'number', label: 'Number', letter: 'N', dot: 'bg-blue-500', bg: 'bg-blue-500/15', text: 'text-blue-500' },
+  { value: 'boolean', label: 'Boolean', letter: 'B', dot: 'bg-amber-500', bg: 'bg-amber-500/15', text: 'text-amber-500' },
+  { value: 'object', label: 'Object', letter: 'O', dot: 'bg-violet-500', bg: 'bg-violet-500/15', text: 'text-violet-500', bracket: '{ }' },
+  { value: 'array', label: 'Array', letter: 'A', dot: 'bg-pink-500', bg: 'bg-pink-500/15', text: 'text-pink-500', bracket: '[ ]' },
 ];
 
 export function getTypeInfo(type: string, types: TypeOption[] = SCHEMA_TYPES): TypeOption {
@@ -77,7 +46,7 @@ export function TypeBadge({
   if (!onChange) {
     return (
       <span
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${info.dot}/15 ${info.text}`}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${info.bg} ${info.text}`}
       >
         {info.letter}
       </span>
@@ -93,7 +62,7 @@ export function TypeBadge({
           e.stopPropagation();
           setOpen(!open);
         }}
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${info.dot}/15 ${info.text}`}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${info.bg} ${info.text}`}
       >
         {info.letter}
       </button>

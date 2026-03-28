@@ -52,15 +52,22 @@ func (h *WSHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	// send the terminal status immediately so the frontend doesn't hang.
 	if exec, err := h.client.WorkflowExecution.Query().
 		Where(entwfexec.ID(executionID)).
-		WithStepExecutions().
+		WithStepExecutions(func(q *ent.StepExecutionQuery) {
+			q.WithStep()
+		}).
 		Only(ctx); err == nil {
 
 		// Send step statuses for any steps that already ran
 		for _, se := range exec.Edges.StepExecutions {
 			stepID := se.StepID
+			stepName := ""
+			if se.Edges.Step != nil {
+				stepName = se.Edges.Step.Name
+			}
 			evt := Event{
 				Type:      EventStepStatus,
 				StepID:    &stepID,
+				StepName:  stepName,
 				Status:    string(se.Status),
 				Timestamp: se.DateCreated,
 			}

@@ -508,6 +508,26 @@ function ConfigureContent({
         />
       </div>
 
+      {stepType?.output_schema?.dynamicOutput && (
+        <>
+          <Separator />
+          <div className="space-y-2">
+            <Label className="text-xs">Output Schema</Label>
+            <p className="text-[11px] text-muted-foreground">
+              Define the fields this step will output so other steps can reference them
+            </p>
+            <div className="rounded-md border p-3">
+              <JsonBuilder
+                value={config._outputSchema as Record<string, any> | undefined}
+                onChange={(v) => onConfigChange({ ...config, _outputSchema: v })}
+                rules={RULES_SCHEMA}
+                emit="schema"
+              />
+            </div>
+          </div>
+        </>
+      )}
+
       {Object.keys(properties).length > 0 && (
         <>
           <Separator />
@@ -675,25 +695,6 @@ function ConfigureContent({
         );
       })}
 
-      {stepType?.output_schema?.dynamicOutput && (
-        <>
-          <Separator />
-          <div className="space-y-2">
-            <Label className="text-xs">Output Schema</Label>
-            <p className="text-[11px] text-muted-foreground">
-              Define the fields this step will output so other steps can reference them
-            </p>
-            <div className="rounded-md border p-3">
-              <JsonBuilder
-                value={config._outputSchema as Record<string, any> | undefined}
-                onChange={(v) => onConfigChange({ ...config, _outputSchema: v })}
-                rules={RULES_SCHEMA}
-                emit="schema"
-              />
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }

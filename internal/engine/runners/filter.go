@@ -13,7 +13,7 @@ func (r *FilterRunner) Run(ctx context.Context, config map[string]any, input map
 	operator, _ := config["operator"].(string)
 	value := fmt.Sprintf("%v", config["value"])
 
-	var filtered []any
+	filtered := make([]any, 0)
 	for _, item := range sourceArray {
 		itemMap, ok := item.(map[string]any)
 		if !ok {

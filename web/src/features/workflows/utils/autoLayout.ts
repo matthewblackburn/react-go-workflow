@@ -3,7 +3,7 @@ import { type Node, Position, type Edge as RFEdge } from '@xyflow/react';
 
 const STEP_NODE_WIDTH = 260;
 const STEP_NODE_HEIGHT = 100;
-const NODE_GAP = 30;
+const NODE_GAP = 40;
 
 function getNodeHeight(node: Node): number {
   return node.measured?.height ?? STEP_NODE_HEIGHT;
@@ -25,7 +25,7 @@ export function getLayoutedNodes(nodes: Node[], edges: RFEdge[]): Node[] {
   const nodeMap = new Map(stepNodes.map((n) => [n.id, n]));
 
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: 'LR', nodesep: 60, ranksep: 120 });
+  g.setGraph({ rankdir: 'LR', nodesep: 80, ranksep: 140 });
   g.setDefaultEdgeLabel(() => ({}));
 
   for (const node of stepNodes) {
@@ -55,8 +55,9 @@ export function getLayoutedNodes(nodes: Node[], edges: RFEdge[]): Node[] {
     ranks.get(r)!.push(id);
   }
 
-  // Build condition branch info
+  // Build condition branch info and error-path tracking
   const conditionChildren = new Map<string, { yes: Set<string>; no: Set<string> }>();
+  const errorTargets = new Set<string>();
   for (const edge of edges) {
     const handle = edge.sourceHandle ?? (edge.data as any)?.sourceOutput;
     if (handle === 'true' || handle === 'false') {
@@ -65,22 +66,25 @@ export function getLayoutedNodes(nodes: Node[], edges: RFEdge[]): Node[] {
       else group.no.add(edge.target);
       conditionChildren.set(edge.source, group);
     }
+    if ((edge.data as any)?.edgeType === 'error') {
+      errorTargets.add(edge.target);
+    }
   }
 
-  // For each rank, sort nodes (Yes before No), then stack with consistent gaps
-  // First pass: calculate each rank's total height and sort order
+  // For each rank, sort nodes: Yes-branch first, normal, No-branch, error-path last
   const rankData = new Map<number, { ids: string[]; totalHeight: number }>();
 
   for (const [r, ids] of ranks) {
-    // Sort: Yes-branch nodes first, then No-branch, then unconnected
     ids.sort((a, b) => {
       const aIsYes = [...conditionChildren.values()].some((g) => g.yes.has(a));
       const aIsNo = [...conditionChildren.values()].some((g) => g.no.has(a));
+      const aIsError = errorTargets.has(a);
       const bIsYes = [...conditionChildren.values()].some((g) => g.yes.has(b));
       const bIsNo = [...conditionChildren.values()].some((g) => g.no.has(b));
+      const bIsError = errorTargets.has(b);
 
-      const aOrder = aIsYes ? 0 : aIsNo ? 2 : 1;
-      const bOrder = bIsYes ? 0 : bIsNo ? 2 : 1;
+      const aOrder = aIsYes ? 0 : aIsError ? 3 : aIsNo ? 2 : 1;
+      const bOrder = bIsYes ? 0 : bIsError ? 3 : bIsNo ? 2 : 1;
       if (aOrder !== bOrder) return aOrder - bOrder;
       return dagreNodes.get(a)!.y - dagreNodes.get(b)!.y;
     });

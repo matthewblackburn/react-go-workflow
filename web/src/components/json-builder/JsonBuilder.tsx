@@ -80,14 +80,15 @@ interface JsonBuilderProps {
 // ── Type config ──────────────────────────────────────────────────────────────
 
 const TYPES = [
-    { value: "string", label: "String", letter: "S", dot: "bg-green-500", text: "text-green-500" },
-    { value: "number", label: "Number", letter: "N", dot: "bg-blue-500", text: "text-blue-500" },
-    { value: "boolean", label: "Boolean", letter: "B", dot: "bg-amber-500", text: "text-amber-500" },
+    { value: "string", label: "String", letter: "S", dot: "bg-green-500", bg: "bg-green-500/15", text: "text-green-500" },
+    { value: "number", label: "Number", letter: "N", dot: "bg-blue-500", bg: "bg-blue-500/15", text: "text-blue-500" },
+    { value: "boolean", label: "Boolean", letter: "B", dot: "bg-amber-500", bg: "bg-amber-500/15", text: "text-amber-500" },
     {
         value: "object",
         label: "Object",
         letter: "O",
         dot: "bg-violet-500",
+        bg: "bg-violet-500/15",
         text: "text-violet-500",
         bracket: "{ }",
     },
@@ -96,6 +97,7 @@ const TYPES = [
         label: "Array",
         letter: "A",
         dot: "bg-pink-500",
+        bg: "bg-pink-500/15",
         text: "text-pink-500",
         bracket: "[ ]",
     },
@@ -539,13 +541,13 @@ function FieldRow({
                                 e.stopPropagation();
                                 setTypePickerOpen(true);
                             }}
-                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${matchedMenuItem ? "" : `${typeInfo.dot}/15 ${typeInfo.text}`}`}
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${matchedMenuItem ? "" : `${typeInfo.bg} ${typeInfo.text}`}`}
                         >
                             {matchedMenuItem ? matchedMenuItem.icon : typeInfo.letter}
                         </button>
                     ) : (
                         <span
-                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${matchedMenuItem ? "" : `${typeInfo.dot}/15 ${typeInfo.text}`}`}
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${matchedMenuItem ? "" : `${typeInfo.bg} ${typeInfo.text}`}`}
                         >
                             {matchedMenuItem ? matchedMenuItem.icon : typeInfo.letter}
                         </span>
@@ -669,7 +671,7 @@ function FieldRow({
                 {!isArrayItem &&
                     (!rules.canChangeType ? (
                         <span
-                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${matchedMenuItem ? "" : `${typeInfo.dot}/15 ${typeInfo.text}`}`}
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${matchedMenuItem ? "" : `${typeInfo.bg} ${typeInfo.text}`}`}
                         >
                             {matchedMenuItem ? matchedMenuItem.icon : typeInfo.letter}
                         </span>
@@ -681,7 +683,7 @@ function FieldRow({
                                 e.stopPropagation();
                                 setTypePickerOpen(true);
                             }}
-                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${matchedMenuItem ? "" : `${typeInfo.dot}/15 ${typeInfo.text}`}`}
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded font-bold text-[9px] ${matchedMenuItem ? "" : `${typeInfo.bg} ${typeInfo.text}`}`}
                         >
                             {matchedMenuItem ? matchedMenuItem.icon : typeInfo.letter}
                         </button>

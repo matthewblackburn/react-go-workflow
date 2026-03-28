@@ -595,10 +595,21 @@ function OutputTab({ workflow, onSaved }: { workflow: Workflow; onSaved: () => v
   });
 
   const secretKeys = useContext(SecretKeysContext);
+  const variables = allStepNodes
+    .filter((s) => s.stepTypeName === 'set_variable' && s.outputSchema?.properties)
+    .flatMap((s) => {
+      const props = s.outputSchema?.properties as Record<string, any> | undefined;
+      if (!props) return [];
+      return Object.keys(props).map((varName) => ({
+        stepLabel: s.label,
+        variableName: varName,
+      }));
+    });
   const valueMenuItems = useReferenceMenuItems({
     allStepNodes,
     workflowInputSchema,
     secretKeys,
+    variables,
   });
 
   return (

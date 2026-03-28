@@ -31,7 +31,6 @@ func (h *WebhookHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	wf, err := h.client.Workflow.Query().
 		Where(
 			entworkflow.WebhookSlug(slug),
-			entworkflow.StatusEQ(entworkflow.StatusActive),
 		).
 		WithSteps(func(q *ent.StepQuery) {
 			q.WithStepType()
