@@ -43,8 +43,8 @@ export function detectFrequency(cron: string): Frequency {
 
   const [min, hour, dom, , dow] = parts;
 
-  if (min === '*' && hour === '*') return 'minute';
-  if (min !== '*' && hour === '*') return 'hourly';
+  if ((min === '*' || min.startsWith('*/')) && hour === '*') return 'minute';
+  if (min !== '*' && !min.startsWith('*/') && hour === '*') return 'hourly';
   if (min !== '*' && hour !== '*' && dom === '*' && dow === '*') return 'daily';
   if (min !== '*' && hour !== '*' && dom === '*' && dow !== '*') return 'weekly';
   if (min !== '*' && hour !== '*' && dom !== '*') return 'monthly';

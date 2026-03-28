@@ -857,6 +857,26 @@ function WorkflowBuilderInner() {
           <AIChatPanel
             open={aiChatOpen}
             onOpenChange={setAIChatOpen}
+            currentWorkflow={
+              stepInfoMap.size > 0
+                ? {
+                    steps: Array.from(stepInfoMap.values()).map((s) => ({
+                      name: s.name,
+                      step_type: s.stepType,
+                      config: s.config,
+                    })),
+                    edges: computedEdges.map((e) => {
+                      const sourceName = stepInfoMap.get(e.source)?.name ?? e.source;
+                      const targetName = stepInfoMap.get(e.target)?.name ?? e.target;
+                      return {
+                        source_step_name: sourceName,
+                        target_step_name: targetName,
+                        edge_type: 'normal',
+                      };
+                    }),
+                  }
+                : undefined
+            }
             onWorkflowGenerated={handleAIWorkflowGenerated}
           />
           <Dialog open={executeDialogOpen} onOpenChange={setExecuteDialogOpen}>

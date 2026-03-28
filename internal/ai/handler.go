@@ -53,7 +53,31 @@ func NewHandler(entClient *ent.Client, apiKey string) *Handler {
 }
 
 type generateRequest struct {
-	Prompt string `json:"prompt" validate:"required,max=5000"`
+	Prompt          string           `json:"prompt" validate:"required,max=5000"`
+	History         []historyMessage `json:"history,omitempty"`
+	CurrentWorkflow *currentWorkflow `json:"current_workflow,omitempty"`
+}
+
+type currentWorkflow struct {
+	Steps []currentStep `json:"steps"`
+	Edges []currentEdge `json:"edges"`
+}
+
+type currentStep struct {
+	Name     string         `json:"name"`
+	StepType string         `json:"step_type"`
+	Config   map[string]any `json:"config"`
+}
+
+type currentEdge struct {
+	SourceStepName string `json:"source_step_name"`
+	TargetStepName string `json:"target_step_name"`
+	EdgeType       string `json:"edge_type"`
+}
+
+type historyMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
 }
 
 type diagnoseRequest struct {
@@ -151,22 +175,49 @@ func (h *Handler) GenerateWorkflow(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Build system prompt and tool schema
+	// Build system prompt and tools
 	systemPrompt := BuildSystemPrompt(h.stepTypes, secretKeys)
-	tool := BuildToolSchema()
+	tools := []Tool{BuildAskQuestionsTool(), BuildToolSchema()}
+
+	// Build messages from history + current prompt
+	var messages []Message
+	for _, m := range req.History {
+		messages = append(messages, Message{Role: m.Role, Content: m.Content})
+	}
+
+	// Include current workflow context if present
+	userPrompt := req.Prompt
+	if req.CurrentWorkflow != nil && len(req.CurrentWorkflow.Steps) > 0 {
+		workflowJSON, _ := json.Marshal(req.CurrentWorkflow)
+		userPrompt = fmt.Sprintf("%s\n\n[Current workflow on canvas — this is the user's existing workflow for context. Do not critique its structure unless asked. If asked to modify it, use create_workflow to output the full updated workflow.]\n%s", req.Prompt, string(workflowJSON))
+	}
+	messages = append(messages, Message{Role: "user", Content: userPrompt})
 
 	// Call Claude API
-	result, err := h.client.CreateMessage(r.Context(), systemPrompt, req.Prompt, []Tool{tool})
+	result, toolName, err := h.client.CreateMessageWithHistory(r.Context(), systemPrompt, messages, tools)
 	if err != nil {
 		slog.Error("AI generation failed", "error", err)
 		if errors.Is(err, ErrTimeout) {
 			shared.WriteJSON(w, http.StatusGatewayTimeout, ErrAITimeout)
 			return
 		}
-		// Pass the specific error message to the frontend
 		shared.WriteJSON(w, http.StatusBadGateway, &shared.APIError{
 			Code:    "AI_UNAVAILABLE",
 			Message: err.Error(),
+		})
+		return
+	}
+
+	// If the AI asked questions instead of generating, return them
+	if toolName == "ask_questions" {
+		questionsRaw, _ := json.Marshal(result)
+		var qResult struct {
+			Questions []string `json:"questions"`
+		}
+		json.Unmarshal(questionsRaw, &qResult)
+		shared.WriteJSON(w, http.StatusOK, map[string]any{
+			"type":      "questions",
+			"questions": qResult.Questions,
 		})
 		return
 	}
@@ -219,7 +270,7 @@ func (h *Handler) DiagnoseExecution(w http.ResponseWriter, r *http.Request) {
 	prompt := buildDiagnosePrompt(req)
 	tool := BuildDiagnoseTool()
 
-	result, err := h.client.CreateMessage(r.Context(), diagnosisSystemPrompt, prompt, []Tool{tool})
+	result, _, err := h.client.CreateMessage(r.Context(), diagnosisSystemPrompt, prompt, []Tool{tool})
 	if err != nil {
 		slog.Error("AI diagnosis failed", "error", err)
 		shared.WriteJSON(w, http.StatusBadGateway, ErrAIUnavailable)

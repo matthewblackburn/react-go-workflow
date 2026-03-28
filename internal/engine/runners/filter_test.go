@@ -94,3 +94,29 @@ func TestFilterRunner_Run(t *testing.T) {
 		})
 	}
 }
+
+func TestFilterRunner_EmptyResult_ReturnsEmptyArray(t *testing.T) {
+	r := &FilterRunner{}
+	config := map[string]any{
+		"source_array": []any{
+			map[string]any{"name": "Alice", "age": "30"},
+		},
+		"field":    "name",
+		"operator": "equals",
+		"value":    "Nobody",
+	}
+	output, err := r.Run(context.Background(), config, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	items, ok := output["items"].([]any)
+	if !ok {
+		t.Fatal("items should be a []any, not nil")
+	}
+	if len(items) != 0 {
+		t.Errorf("expected 0 items, got %d", len(items))
+	}
+	if output["count"] != 0 {
+		t.Errorf("expected count 0, got %v", output["count"])
+	}
+}

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"react-go-workflow/ent"
-	entworkflow "react-go-workflow/ent/workflow"
 	"react-go-workflow/internal/engine"
 
 	"github.com/google/uuid"
@@ -49,7 +48,6 @@ func NewCronScheduler(client *ent.Client, executor *engine.Executor) *CronSchedu
 // Start loads all active cron workflows and registers them.
 func (s *CronScheduler) Start(ctx context.Context) error {
 	allActive, err := s.client.Workflow.Query().
-		Where(entworkflow.StatusEQ(entworkflow.StatusActive)).
 		All(ctx)
 	if err != nil {
 		return err
@@ -81,8 +79,8 @@ func (s *CronScheduler) Sync(workflowID uuid.UUID, name string, status string, t
 		slog.Info("removed cron job", "workflow", name)
 	}
 
-	// Only register if workflow is active and cron is enabled
-	if status != "active" {
+	// Only register if workflow is not archived and cron is enabled
+	if status == "archived" {
 		return
 	}
 

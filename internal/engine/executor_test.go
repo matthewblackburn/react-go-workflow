@@ -358,8 +358,8 @@ func TestExecutor_ConditionBranching(t *testing.T) {
 				t.Fatalf("true_branch should be completed, got %s", se.Status)
 			}
 		case "false_branch":
-			if se.Status.String() != "pending" {
-				t.Fatalf("false_branch should be pending (skipped), got %s", se.Status)
+			if se.Status.String() != "skipped" {
+				t.Fatalf("false_branch should be skipped, got %s", se.Status)
 			}
 		}
 	}

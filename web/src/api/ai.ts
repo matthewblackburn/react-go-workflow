@@ -1,4 +1,5 @@
 import type {
+  AskQuestionsResponse,
   DiagnoseRequest,
   DiagnoseResponse,
   GenerateWorkflowRequest,
@@ -8,7 +9,10 @@ import { api } from './client';
 
 export const aiApi = {
   generateWorkflow: (data: GenerateWorkflowRequest) =>
-    api.post<GenerateWorkflowResponse>('/v1/ai/generate-workflow', data),
+    api.post<GenerateWorkflowResponse | AskQuestionsResponse>(
+      '/v1/ai/generate-workflow',
+      data,
+    ),
   diagnoseExecution: (data: DiagnoseRequest) =>
     api.post<DiagnoseResponse>('/v1/ai/diagnose-execution', data),
 };

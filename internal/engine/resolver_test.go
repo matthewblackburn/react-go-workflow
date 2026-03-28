@@ -221,3 +221,12 @@ func TestExtractStepRefs_UUID(t *testing.T) {
 		t.Error("expected UUID ref")
 	}
 }
+
+func TestResolveString_MixedExpressionFails(t *testing.T) {
+	ctx := NewExecContext(nil)
+	// Mixed text + unresolvable expression should return an error, not silently leave it
+	_, err := ResolveString("Hello {{workflow.input.name}}", ctx)
+	if err == nil {
+		t.Fatal("expected error for unresolvable expression in mixed string")
+	}
+}

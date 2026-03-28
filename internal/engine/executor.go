@@ -63,6 +63,25 @@ func (e *Executor) WaitForCompletion(ctx context.Context, executionID uuid.UUID,
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	fetchResult := func() (*ent.WorkflowExecution, error) {
+		return e.client.WorkflowExecution.Query().
+			Where(entwfexec.ID(executionID)).
+			WithStepExecutions(func(q *ent.StepExecutionQuery) {
+				q.WithStep(func(sq *ent.StepQuery) {
+					sq.WithStepType()
+				})
+			}).
+			Only(context.Background())
+	}
+
+	// Check if already completed before subscribing (race condition: fast executions)
+	if exec, err := fetchResult(); err == nil {
+		status := string(exec.Status)
+		if status == "completed" || status == "failed" || status == "cancelled" {
+			return exec, nil
+		}
+	}
+
 	ch := e.eventBus.Subscribe(executionID)
 	defer e.eventBus.Unsubscribe(executionID, ch)
 
@@ -72,20 +91,11 @@ func (e *Executor) WaitForCompletion(ctx context.Context, executionID uuid.UUID,
 			return nil, fmt.Errorf("timed out waiting for execution to complete")
 		case event, ok := <-ch:
 			if !ok {
-				// Channel closed — execution finished, fetch from DB
-				break
+				return fetchResult()
 			}
 			if event.Type == EventExecutionStatus {
 				if event.Status == "completed" || event.Status == "failed" || event.Status == "cancelled" {
-					// Fetch the final record with output
-					return e.client.WorkflowExecution.Query().
-						Where(entwfexec.ID(executionID)).
-						WithStepExecutions(func(q *ent.StepExecutionQuery) {
-							q.WithStep(func(sq *ent.StepQuery) {
-								sq.WithStepType()
-							})
-						}).
-						Only(context.Background())
+					return fetchResult()
 				}
 			}
 		}
@@ -384,7 +394,7 @@ func (e *Executor) executeDAG(ctx context.Context, wf *ent.Workflow, exec *ent.W
 						}
 						if edge.SourceOutput != condResult {
 							// Decrement in-degree for non-taken branch; skip if no other path leads here
-							e.skipBranch(ctx, edge.TargetStepID, executionID, stepExecs, stepsByID, done, inDegree, normalEdges, skipped)
+							e.skipBranch(ctx, edge.TargetStepID, executionID, stepExecs, stepsByID, done, inDegree, normalEdges, implicitDownstream, skipped)
 							continue
 						}
 					}
@@ -625,7 +635,7 @@ func (e *Executor) failStep(ctx context.Context, stepExec *ent.StepExecution, ex
 // skipBranch decrements the in-degree for a step on a non-taken condition branch.
 // If the step's in-degree reaches 0 and all its sources are skipped/done, it gets skipped.
 // This avoids skipping steps that merge multiple branches (e.g. a step after both true/false paths).
-func (e *Executor) skipBranch(ctx context.Context, stepID uuid.UUID, executionID uuid.UUID, stepExecs map[uuid.UUID]*ent.StepExecution, stepsByID map[uuid.UUID]*ent.Step, done map[uuid.UUID]bool, inDegree map[uuid.UUID]int, normalEdges map[uuid.UUID][]*ent.Edge, skipped map[uuid.UUID]bool) {
+func (e *Executor) skipBranch(ctx context.Context, stepID uuid.UUID, executionID uuid.UUID, stepExecs map[uuid.UUID]*ent.StepExecution, stepsByID map[uuid.UUID]*ent.Step, done map[uuid.UUID]bool, inDegree map[uuid.UUID]int, normalEdges map[uuid.UUID][]*ent.Edge, implicitDownstream map[uuid.UUID][]uuid.UUID, skipped map[uuid.UUID]bool) {
 	if done[stepID] || skipped[stepID] {
 		return
 	}
@@ -666,9 +676,12 @@ func (e *Executor) skipBranch(ctx context.Context, stepID uuid.UUID, executionID
 		CompletedAt: &now,
 	})
 
-	// Propagate skip to downstream steps
+	// Propagate skip to downstream steps (explicit and implicit edges)
 	for _, edge := range normalEdges[stepID] {
-		e.skipBranch(ctx, edge.TargetStepID, executionID, stepExecs, stepsByID, done, inDegree, normalEdges, skipped)
+		e.skipBranch(ctx, edge.TargetStepID, executionID, stepExecs, stepsByID, done, inDegree, normalEdges, implicitDownstream, skipped)
+	}
+	for _, targetID := range implicitDownstream[stepID] {
+		e.skipBranch(ctx, targetID, executionID, stepExecs, stepsByID, done, inDegree, normalEdges, implicitDownstream, skipped)
 	}
 }
 

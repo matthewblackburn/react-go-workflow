@@ -1,6 +1,7 @@
 package trigger
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -51,7 +52,8 @@ func (h *WebhookHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewDecoder(r.Body).Decode(&input)
 	}
 
-	executionID, err := h.executor.Execute(r.Context(), wf.ID, "webhook", input)
+	// Use background context so execution isn't cancelled when the HTTP response is sent
+	executionID, err := h.executor.Execute(context.Background(), wf.ID, "webhook", input)
 	if err != nil {
 		shared.WriteJSON(w, http.StatusConflict, map[string]string{"error": err.Error()})
 		return

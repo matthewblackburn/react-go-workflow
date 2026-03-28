@@ -77,17 +77,20 @@ type apiError struct {
 	Message string `json:"message"`
 }
 
-// CreateMessage sends a message to the Claude API and returns the tool_use result.
-// It expects the model to respond with a tool call matching the provided tool.
-func (c *Client) CreateMessage(ctx context.Context, systemPrompt string, userMessage string, tools []Tool) (map[string]any, error) {
+// CreateMessage sends a single user message to the Claude API and returns the tool_use result.
+func (c *Client) CreateMessage(ctx context.Context, systemPrompt string, userMessage string, tools []Tool) (map[string]any, string, error) {
+	return c.CreateMessageWithHistory(ctx, systemPrompt, []Message{{Role: "user", Content: userMessage}}, tools)
+}
+
+// CreateMessageWithHistory sends messages with full conversation history and returns
+// the tool_use result (if any) and the tool name that was called.
+func (c *Client) CreateMessageWithHistory(ctx context.Context, systemPrompt string, messages []Message, tools []Tool) (map[string]any, string, error) {
 	reqBody := apiRequest{
 		Model:     anthropicModel,
 		MaxTokens: 4096,
 		System:    systemPrompt,
-		Messages: []Message{
-			{Role: "user", Content: userMessage},
-		},
-		Tools: tools,
+		Messages:  messages,
+		Tools:     tools,
 	}
 
 	// Force tool use when tools are provided
@@ -97,12 +100,12 @@ func (c *Client) CreateMessage(ctx context.Context, systemPrompt string, userMes
 
 	body, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, fmt.Errorf("marshal request: %w", err)
+		return nil, "", fmt.Errorf("marshal request: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, anthropicAPIURL, bytes.NewReader(body))
 	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+		return nil, "", fmt.Errorf("create request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -112,38 +115,38 @@ func (c *Client) CreateMessage(ctx context.Context, systemPrompt string, userMes
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		if ctx.Err() != nil || errors.Is(err, context.DeadlineExceeded) {
-			return nil, ErrTimeout
+			return nil, "", ErrTimeout
 		}
-		return nil, fmt.Errorf("%w: %v", ErrServiceUnavailable, err)
+		return nil, "", fmt.Errorf("%w: %v", ErrServiceUnavailable, err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to read response", ErrServiceUnavailable)
+		return nil, "", fmt.Errorf("%w: failed to read response", ErrServiceUnavailable)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == 529 {
-			return nil, fmt.Errorf("%w: Claude is temporarily overloaded, please try again in a moment", ErrServiceUnavailable)
+			return nil, "", fmt.Errorf("%w: Claude is temporarily overloaded, please try again in a moment", ErrServiceUnavailable)
 		}
 		if resp.StatusCode == 429 {
-			return nil, fmt.Errorf("%w: rate limit exceeded, please wait a moment and try again", ErrServiceUnavailable)
+			return nil, "", fmt.Errorf("%w: rate limit exceeded, please wait a moment and try again", ErrServiceUnavailable)
 		}
-		return nil, fmt.Errorf("%w: status %d: %s", ErrServiceUnavailable, resp.StatusCode, string(respBody))
+		return nil, "", fmt.Errorf("%w: status %d: %s", ErrServiceUnavailable, resp.StatusCode, string(respBody))
 	}
 
 	var apiResp apiResponse
 	if err := json.Unmarshal(respBody, &apiResp); err != nil {
-		return nil, fmt.Errorf("%w: failed to parse response", ErrUnexpectedResponse)
+		return nil, "", fmt.Errorf("%w: failed to parse response", ErrUnexpectedResponse)
 	}
 
 	// Extract the tool_use content block
 	for _, block := range apiResp.Content {
 		if block.Type == "tool_use" {
-			return block.Input, nil
+			return block.Input, block.Name, nil
 		}
 	}
 
-	return nil, fmt.Errorf("%w: no tool_use block in response", ErrUnexpectedResponse)
+	return nil, "", fmt.Errorf("%w: no tool_use block in response", ErrUnexpectedResponse)
 }

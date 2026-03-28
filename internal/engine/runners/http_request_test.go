@@ -104,7 +104,7 @@ func TestHTTPRequest_CustomHeaders(t *testing.T) {
 	}
 }
 
-func TestHTTPRequest_BearerAuth(t *testing.T) {
+func TestHTTPRequest_AuthViaHeaders(t *testing.T) {
 	var gotAuth string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotAuth = r.Header.Get("Authorization")
@@ -114,9 +114,10 @@ func TestHTTPRequest_BearerAuth(t *testing.T) {
 
 	runner := &HTTPRequestRunner{}
 	_, err := runner.Run(context.Background(), map[string]any{
-		"url":        srv.URL,
-		"auth_type":  "bearer",
-		"auth_value": "tok123",
+		"url": srv.URL,
+		"headers": map[string]any{
+			"Authorization": "Bearer tok123",
+		},
 	}, nil)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -124,29 +125,6 @@ func TestHTTPRequest_BearerAuth(t *testing.T) {
 	}
 	if gotAuth != "Bearer tok123" {
 		t.Errorf("Authorization = %q, want %q", gotAuth, "Bearer tok123")
-	}
-}
-
-func TestHTTPRequest_BasicAuth(t *testing.T) {
-	var gotAuth string
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gotAuth = r.Header.Get("Authorization")
-		fmt.Fprint(w, `{}`)
-	}))
-	defer srv.Close()
-
-	runner := &HTTPRequestRunner{}
-	_, err := runner.Run(context.Background(), map[string]any{
-		"url":        srv.URL,
-		"auth_type":  "basic",
-		"auth_value": "dXNlcjpwYXNz",
-	}, nil)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-		return
-	}
-	if gotAuth != "Basic dXNlcjpwYXNz" {
-		t.Errorf("Authorization = %q, want %q", gotAuth, "Basic dXNlcjpwYXNz")
 	}
 }
 

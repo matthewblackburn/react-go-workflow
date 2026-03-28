@@ -6,11 +6,13 @@ describe('detectFrequency', () => {
     expect(detectFrequency('* * * * *')).toBe('minute');
   });
 
-  it('detects hourly frequency for */N minute patterns', () => {
-    expect(detectFrequency('*/5 * * * *')).toBe('hourly');
+  it('detects every-N-minutes pattern as minute frequency', () => {
+    expect(detectFrequency('*/5 * * * *')).toBe('minute');
+    expect(detectFrequency('*/15 * * * *')).toBe('minute');
+    expect(detectFrequency('*/1 * * * *')).toBe('minute');
   });
 
-  it('detects hourly frequency', () => {
+  it('detects hourly frequency for fixed minute', () => {
     expect(detectFrequency('30 * * * *')).toBe('hourly');
   });
 
@@ -47,6 +49,11 @@ describe('parseCronParts', () => {
   it('extracts everyMinutes from */N pattern', () => {
     const parts = parseCronParts('*/10 * * * *');
     expect(parts.everyMinutes).toBe('10');
+  });
+
+  it('extracts everyMinutes from */5 pattern', () => {
+    const parts = parseCronParts('*/5 * * * *');
+    expect(parts.everyMinutes).toBe('5');
   });
 
   it('defaults everyMinutes to 5 when minute is not */N', () => {

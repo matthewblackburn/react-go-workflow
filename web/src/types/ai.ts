@@ -1,5 +1,15 @@
 export interface GenerateWorkflowRequest {
   prompt: string;
+  history?: { role: string; content: string }[];
+  current_workflow?: {
+    steps: { name: string; step_type: string; config: Record<string, unknown> }[];
+    edges: { source_step_name: string; target_step_name: string; edge_type: string }[];
+  };
+}
+
+export interface AskQuestionsResponse {
+  type: 'questions';
+  questions: string[];
 }
 
 export interface GeneratedStep {

@@ -94,8 +94,9 @@ Examples:
 4. Only use step types from the catalog above.
 5. Create a practical, working workflow that accomplishes the user's goal.
 6. Keep workflows simple — use the minimum number of steps needed.
-7. Expressions ONLY support dot-path navigation into maps/objects. Do NOT use JavaScript, function calls, property accessors like .length, .toString(), or array indexing like [0]. Examples of INVALID expressions: {{new Date()}}, {{Math.random()}}, {{steps.x.output.items.length}}, {{steps.x.output.items[0]}}. To get an array count, use the filter step's output.count or a transform step.
-8. When the user's request needs an external API but doesn't specify one, use real free mock APIs instead of placeholder URLs. Good options:
+7. If the user's request is vague or ambiguous, use the ask_questions tool FIRST to clarify before generating. Ask 2-4 focused questions. Do NOT ask questions if the request is clear enough to build a reasonable workflow.
+8. Expressions ONLY support dot-path navigation into maps/objects. Do NOT use JavaScript, function calls, property accessors like .length, .toString(), or array indexing like [0]. Examples of INVALID expressions: {{new Date()}}, {{Math.random()}}, {{steps.x.output.items.length}}, {{steps.x.output.items[0]}}. To get an array count, use the filter step's output.count or a transform step.
+9. When the user's request needs an external API but doesn't specify one, use real free mock APIs instead of placeholder URLs. Good options:
    - https://jsonplaceholder.typicode.com/posts (list posts), /posts/1 (single post), /users, /todos
    - https://httpbin.org/get, /post, /status/200, /delay/1
    - https://dummyjson.com/products, /users, /posts
@@ -169,6 +170,28 @@ func buildDiagnosePrompt(req diagnoseRequest) string {
 	}
 
 	return b.String()
+}
+
+// BuildAskQuestionsTool returns the tool for asking clarifying questions.
+func BuildAskQuestionsTool() Tool {
+	return Tool{
+		Name:        "ask_questions",
+		Description: "Ask the user clarifying questions before generating a workflow. Use this when the request is vague or ambiguous.",
+		InputSchema: map[string]any{
+			"type":                 "object",
+			"additionalProperties": false,
+			"required":             []string{"questions"},
+			"properties": map[string]any{
+				"questions": map[string]any{
+					"type":        "array",
+					"description": "2-4 focused clarifying questions",
+					"items": map[string]any{
+						"type": "string",
+					},
+				},
+			},
+		},
+	}
 }
 
 // BuildToolSchema returns the strict tool definition for structured workflow output.

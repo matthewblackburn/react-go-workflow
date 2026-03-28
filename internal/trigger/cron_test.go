@@ -45,10 +45,16 @@ func TestCronScheduler_SyncInactiveStatus(t *testing.T) {
 		t.Fatal("expected 1 entry after active sync")
 	}
 
-	// Now sync as inactive — should remove it
-	s.Sync(wfID, "test-workflow", "inactive", config)
+	// Sync as draft — should still be registered
+	s.Sync(wfID, "test-workflow", "draft", config)
+	if len(s.List()) != 1 {
+		t.Fatalf("expected 1 entry after draft sync, got %d", len(s.List()))
+	}
+
+	// Now sync as archived — should remove it
+	s.Sync(wfID, "test-workflow", "archived", config)
 	if len(s.List()) != 0 {
-		t.Fatalf("expected 0 entries after inactive sync, got %d", len(s.List()))
+		t.Fatalf("expected 0 entries after archived sync, got %d", len(s.List()))
 	}
 }
 

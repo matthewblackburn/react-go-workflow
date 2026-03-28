@@ -46,7 +46,7 @@ func TestCreateMessage_CancelledContext(t *testing.T) {
 	cancelCtx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 
-	_, err := client.CreateMessage(cancelCtx, "system", "user", nil)
+	_, _, err := client.CreateMessage(cancelCtx, "system", "user", nil)
 	if err == nil {
 		t.Fatal("expected error for cancelled context")
 	}

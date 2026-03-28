@@ -35,27 +35,14 @@ describe('AIChatPanel', () => {
     renderPanel();
     expect(screen.getByText('AI Workflow Generator')).toBeInTheDocument();
     expect(screen.getByText(/describe what you want/i)).toBeInTheDocument();
-    expect(screen.getByText('Generate Workflow')).toBeInTheDocument();
   });
 
-  it('disables generate button when prompt is empty', () => {
+  it('disables send button when input is empty', () => {
     renderPanel();
-    const button = screen.getByText('Generate Workflow').closest('button');
-    expect(button).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
   });
 
-  it('enables generate button when prompt has text', async () => {
-    const user = userEvent.setup();
-    renderPanel();
-
-    const textarea = screen.getByPlaceholderText(/when a webhook fires/i);
-    await user.type(textarea, 'Create a workflow');
-
-    const button = screen.getByText('Generate Workflow').closest('button');
-    expect(button).not.toBeDisabled();
-  });
-
-  it('calls API and onWorkflowGenerated on success', async () => {
+  it('sends message and shows workflow result', async () => {
     const user = userEvent.setup();
     const mockResponse = {
       steps: [
@@ -69,15 +56,16 @@ describe('AIChatPanel', () => {
 
     const { props } = renderPanel();
 
-    const textarea = screen.getByPlaceholderText(/when a webhook fires/i);
+    const textarea = screen.getByPlaceholderText(/describe your workflow/i);
     await user.type(textarea, 'Fetch data from an API');
 
-    const button = screen.getByText('Generate Workflow').closest('button')!;
-    await user.click(button);
+    // Click send button
+    await user.click(screen.getByRole('button', { name: 'Send' }));
 
     await waitFor(() => {
       expect(aiApi.generateWorkflow).toHaveBeenCalledWith({
         prompt: 'Fetch data from an API',
+        history: [],
       });
     });
 
@@ -89,16 +77,34 @@ describe('AIChatPanel', () => {
       );
     });
 
-    // Summary should be displayed
     await waitFor(() => {
       expect(screen.getByText('A simple workflow')).toBeInTheDocument();
+    });
+  });
+
+  it('handles clarifying questions', async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(aiApi.generateWorkflow).mockResolvedValueOnce({
+      type: 'questions',
+      questions: ['What API endpoint?', 'Should errors be retried?'],
+    } as any);
+
+    renderPanel();
+
+    const textarea = screen.getByPlaceholderText(/describe your workflow/i);
+    await user.type(textarea, 'Build me a workflow');
+    await user.click(screen.getByRole('button', { name: 'Send' }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/What API endpoint/)).toBeInTheDocument();
+      expect(screen.getByText(/Should errors be retried/)).toBeInTheDocument();
     });
   });
 
   it('shows loading state while generating', async () => {
     const user = userEvent.setup();
 
-    // Create a promise that we control
     let resolvePromise: (value: any) => void;
     const pendingPromise = new Promise((resolve) => {
       resolvePromise = resolve;
@@ -107,17 +113,14 @@ describe('AIChatPanel', () => {
 
     renderPanel();
 
-    const textarea = screen.getByPlaceholderText(/when a webhook fires/i);
+    const textarea = screen.getByPlaceholderText(/describe your workflow/i);
     await user.type(textarea, 'Test workflow');
-
-    const button = screen.getByText('Generate Workflow').closest('button')!;
-    await user.click(button);
+    await user.click(screen.getByRole('button', { name: 'Send' }));
 
     await waitFor(() => {
-      expect(screen.getByText('Generating...')).toBeInTheDocument();
+      expect(screen.getByText('Thinking...')).toBeInTheDocument();
     });
 
-    // Resolve the promise to clean up
     resolvePromise!({ steps: [], edges: [], summary: '' });
   });
 });
