@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -137,8 +138,19 @@ func run() error {
 		MaxAge:           300,
 	}))
 
-	// Supertokens middleware — handles /auth/* routes automatically
-	r.Use(supertokens.Middleware)
+	// Supertokens middleware — handles /auth/* routes automatically.
+	// Skipped for /ws/ paths because its ResponseWriter wrapper drops
+	// http.Hijacker which nhooyr/websocket requires for the upgrade.
+	r.Use(func(next http.Handler) http.Handler {
+		stMiddleware := supertokens.Middleware(next)
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.HasPrefix(r.URL.Path, "/ws/") {
+				next.ServeHTTP(w, r)
+				return
+			}
+			stMiddleware.ServeHTTP(w, r)
+		})
+	})
 
 	// Health check (unauthenticated)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -216,13 +228,14 @@ func run() error {
 
 		// Dashboard
 		r.Get("/bff/dashboard", workflowHandler.Dashboard)
+	})
 
-		// AI — extended timeout for LLM calls
-		r.Group(func(r chi.Router) {
-			r.Use(chimw.Timeout(60 * time.Second))
-			r.Post("/v1/ai/generate-workflow", aiHandler.GenerateWorkflow)
-			r.Post("/v1/ai/diagnose-execution", aiHandler.DiagnoseExecution)
-		})
+	// AI routes — separate group with extended timeout for LLM calls
+	r.Group(func(r chi.Router) {
+		r.Use(auth.RequireSession())
+		r.Use(chimw.Timeout(60 * time.Second))
+		r.Post("/v1/ai/generate-workflow", aiHandler.GenerateWorkflow)
+		r.Post("/v1/ai/diagnose-execution", aiHandler.DiagnoseExecution)
 	})
 
 	// Webhook endpoint (public, no auth)

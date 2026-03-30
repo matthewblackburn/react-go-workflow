@@ -14,6 +14,12 @@ export class ApiError extends Error {
   }
 }
 
+let onUnauthorized: (() => void) | null = null;
+
+export function setOnUnauthorized(cb: () => void) {
+  onUnauthorized = cb;
+}
+
 function buildQuery(params?: Record<string, string | number | boolean | undefined>): string {
   if (!params) return '';
   const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== '');
@@ -36,6 +42,9 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      onUnauthorized?.();
+    }
     let err: APIError;
     try {
       err = await res.json();

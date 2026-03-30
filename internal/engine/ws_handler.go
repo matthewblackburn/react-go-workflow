@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"nhooyr.io/websocket"
 )
 
@@ -25,6 +26,18 @@ func NewWSHandler(eventBus *EventBus, client *ent.Client) *WSHandler {
 
 // Handle upgrades the HTTP connection to a WebSocket and streams execution events.
 func (h *WSHandler) Handle(w http.ResponseWriter, r *http.Request) {
+	// Verify session without wrapping the ResponseWriter (which would break
+	// http.Hijacker needed by nhooyr/websocket).
+	cookie, err := r.Cookie("sAccessToken")
+	if err != nil || cookie.Value == "" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if _, err := session.GetSessionWithoutRequestResponse(cookie.Value, nil, nil); err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	executionID, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, "invalid execution id", http.StatusBadRequest)

@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import Session from 'supertokens-web-js/recipe/session';
+import { setOnUnauthorized } from '@/api/client';
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -23,6 +24,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     checkSession();
   }, [checkSession]);
+
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      setIsAuthenticated(false);
+    });
+  }, []);
 
   const signOut = useCallback(async () => {
     await Session.signOut();
